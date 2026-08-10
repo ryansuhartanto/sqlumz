@@ -1,7 +1,5 @@
 const config = {
-	extends: [
-		"@kekkon-nexus/config/commitlint",
-	],
+	extends: ["@kekkon-nexus/config/commitlint"],
 };
 
 export default config;
