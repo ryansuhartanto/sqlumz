@@ -1,20 +1,47 @@
 {
-  "name": "sqlumz",
-  "version": "0.1.0",
-  "description": "Easy Sequelize v7 migration and seed.",
-  "bugs": "https://github.com/ryansuhartanto/sqlumz",
-  "license": "MIT",
-  "author": "Ryan Suhartanto <suhartanto@kekkon.nexus>",
-  "repository": "ryansuhartanto/sqlumz",
-  "type": "module",
-  "devDependencies": {
-    "@commitlint/cli": "^21.2.1",
-    "@kekkon-nexus/config": "^2.260806.0",
-    "@types/node": "^26.1.2",
-    "oxfmt": ">=0.62.0 <1",
-    "oxlint": "^1.77.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "typescript": "^7.0.2",
-    "vite-plus": "^0.2.8"
-  }
+	"name": "sqlumz",
+	"version": "0.1.0",
+	"description": "Easy Sequelize v7 migration and seed.",
+	"bugs": "https://github.com/ryansuhartanto/sqlumz",
+	"license": "MIT",
+	"author": "Ryan Suhartanto <suhartanto@kekkon.nexus>",
+	"repository": "ryansuhartanto/sqlumz",
+	"type": "module",
+	"imports": {
+		"#/*": "src/*"
+	},
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.mts",
+				"default": "./dist/index.mjs"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
+		}
+	},
+	"scripts": {
+		"build": "vp pack",
+		"fmt": "vp fmt",
+		"lint": "vp lint",
+		"prepare": "vp config",
+		"prepack": "vpr build"
+	},
+	"dependencies": {
+		"@sequelize/core": "v7.0.0-alpha.48",
+		"umzug": "^3.8.3"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^21.2.1",
+		"@kekkon-nexus/config": "^2.260806.0",
+		"@types/node": "^26.1.2",
+		"eslint-plugin-no-relative-import-paths": "^1.6.1",
+		"oxfmt": ">=0.62.0 <1",
+		"oxlint": "^1.77.0",
+		"oxlint-tsgolint": "^7.0.2001",
+		"typescript": "^7.0.2",
+		"vite-plus": "^0.2.8"
+	}
 }
