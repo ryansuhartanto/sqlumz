@@ -1,0 +1,34 @@
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/aube-action@v1
+      - run: aube ci
+      - run: aubx vp check
+      - run: aube pack
+      - uses: actions/upload-artifact@v7
+        id: artifact
+        with:
+          path: sqlumz-*.tgz
+          archive: false
+
+  cd:
+    runs-on: ubuntu-latest
+    needs: [ci]
+    permissions:
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          skip-decompress: true
+      - uses: actions/attest@v4
+        with:
+          subject-path: sqlumz-*.tgz
+      - uses: jdx/aube-action@v1
+      - run: aubx pkg-pr-new publish sqlumz-*.tgz
