@@ -32,6 +32,10 @@ export default defineConfig({
 		"*": "vp check --fix --no-error-on-unmatched-pattern",
 	},
 
+	resolve: {
+		conditions: ["dev"],
+	},
+
 	pack: [
 		{
 			entry: ["src/**/*.ts", "!src/**/*.test.ts"],
