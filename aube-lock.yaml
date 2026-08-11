@@ -14,6 +14,9 @@ importers:
       cosmiconfig:
         specifier: ^10.0.0
         version: 10.0.0
+      gunshi:
+        specifier: ^0.37.1
+        version: 0.37.1
       umzug:
         specifier: ^3.8.3
         version: 3.8.3(@types/node@26.2.0)
@@ -1558,6 +1561,10 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  gunshi@0.37.1:
+    resolution: {integrity: sha512-C3t35z65PQpAHay/gzEu4J/7SNWXn2NhfC4RfZQPxyOqkPfDTizthxCPoSU48OazoVherCuCpFDKI1qcY425Gw==}
+    engines: {node: '>= 22'}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -3189,6 +3196,8 @@ snapshots:
       ini: 6.0.0
 
   graceful-fs@4.2.11: {}
+
+  gunshi@0.37.1: {}
 
   has-flag@4.0.0: {}
 

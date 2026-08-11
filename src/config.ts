@@ -58,7 +58,9 @@ export type Config = z.input<typeof configSchema>;
 const moduleName = "sqlumz";
 const explorer = cosmiconfig(moduleName);
 
-export async function getConfig(): Promise<z.output<typeof configSchema>> {
-	const result = await explorer.search();
+export async function getConfig(
+	search?: string,
+): Promise<z.output<typeof configSchema>> {
+	const result = await explorer.search(search);
 	return configSchema.parse(result?.config);
 }

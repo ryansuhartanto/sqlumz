@@ -29,7 +29,8 @@
 				"default": "./dist/index.cjs"
 			},
 			"dev": "./src/index.ts"
-		}
+		},
+		"./package.json": "./package.json"
 	},
 	"scripts": {
 		"build": "vp pack",
@@ -43,6 +44,7 @@
 	"dependencies": {
 		"@sequelize/core": "v7.0.0-alpha.48",
 		"cosmiconfig": "^10.0.0",
+		"gunshi": "^0.37.1",
 		"umzug": "^3.8.3",
 		"zod": "^4.4.3"
 	},

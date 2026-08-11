@@ -48,7 +48,7 @@ export default defineConfig({
 		},
 		{
 			entry: {
-				"bin/*": "bin/*.ts",
+				"bin/index": "bin/index.ts",
 			},
 			sourcemap: true,
 
