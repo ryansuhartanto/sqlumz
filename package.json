@@ -13,8 +13,14 @@
 	"type": "module",
 	"imports": {
 		"#/*": {
-			"import": "./dist/*.mjs",
-			"require": "./dist/*.cjs",
+			"import": {
+				"types": "./dist/*.d.mts",
+				"default": "./dist/*.mjs"
+			},
+			"require": {
+				"types": "./dist/*.d.cts",
+				"default": "./dist/*.cjs"
+			},
 			"dev": "./src/*.ts"
 		},
 		"#/package.json": "./package.json"
