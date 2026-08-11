@@ -1,33 +1,33 @@
 // oxlint-disable jest/valid-title
+import { dirname } from "node:path";
+
 import { AbstractDialect } from "@sequelize/core";
+import { SUPPORTED_DIALECTS } from "@sequelize/core/_non-semver-use-at-your-own-risk_/sequelize-typescript.js";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { ZodError } from "zod";
 
-import { defineConfig, getConfig } from "#/config";
+import { configSchema, defineConfig, loadConfig } from "#/config";
 
-const { mockSearch } = vi.hoisted(() => ({
-	mockSearch: vi.fn(),
+const { mockExplorer } = vi.hoisted(() => ({
+	mockExplorer: {
+		search: vi.fn(),
+		load: vi.fn(),
+	},
 }));
 
 vi.mock("cosmiconfig", () => ({
-	cosmiconfig: vi.fn(() => ({
-		search: mockSearch,
-	})),
+	cosmiconfig: vi.fn().mockReturnValue(mockExplorer),
 }));
 
 beforeEach(() => {
 	vi.clearAllMocks();
 });
 
-describe(defineConfig, () => {
-	it("parses and returns configuration with defaults", () => {
-		const input = {
-			sequelize: { dialect: "postgres" as const },
-		};
+describe(configSchema.parse, () => {
+	it("parses dialect with default", () => {
+		const config = { sequelize: { dialect: "postgres" } };
 
-		const result = defineConfig(input);
-
-		expect(result).toStrictEqual({
+		expect(configSchema.parse(config)).toStrictEqual({
 			path: {
 				migrations: "migrations",
 				seeds: "seeds",
@@ -36,63 +36,80 @@ describe(defineConfig, () => {
 		});
 	});
 
-	it("accepts custom migration and seed paths", () => {
-		const input = {
-			path: {
-				migrations: "custom-migrations",
-				seeds: "custom-seeds",
-			},
-			sequelize: { dialect: "mysql" as const },
-		};
+	it.each(SUPPORTED_DIALECTS)("validates dialect name: %s", (dialect) => {
+		const config = { sequelize: { dialect } };
 
-		expect(defineConfig(input)).toStrictEqual(input);
+		expect(configSchema.parse(config)).toBeDefined();
 	});
 
-	it("accepts custom dialect class", () => {
+	it("validates custom dialect class", () => {
 		// @ts-expect-error
-		class MyCustomDialect extends AbstractDialect {}
-		const input = {
-			sequelize: { dialect: MyCustomDialect },
-		};
+		class MockDialect extends AbstractDialect {}
+		const config = { sequelize: { dialect: MockDialect } };
 
-		const result = defineConfig(input);
-		expect(result.sequelize.dialect).toBe(MyCustomDialect);
+		expect(configSchema.parse(config)).toBeDefined();
 	});
 
-	it("throws on invalid dialect string", () => {
-		const input = {
-			sequelize: { dialect: "mongodb" },
-		};
+	it("rejects invalid dialects", () => {
+		const config = { sequelize: { dialect: "?" } };
 
-		expect(() => defineConfig(input as any)).toThrow(ZodError);
+		expect(() => configSchema.parse(config)).toThrow(ZodError);
 	});
 });
 
-describe(getConfig, () => {
-	it("fetches and parses configuration", async () => {
-		const config = {
-			sequelize: { dialect: "mysql" },
-		};
-		mockSearch.mockResolvedValue({ config });
+describe(defineConfig, () => {
+	it("returns configuration as is", () => {
+		const config = { sequelize: { dialect: "mysql" } } as const;
 
-		const result = await getConfig();
+		expect(defineConfig(config)).toStrictEqual(config);
+	});
+});
 
-		expect(mockSearch).toHaveBeenCalledTimes(1);
-		expect(result).toStrictEqual({
-			path: {
-				migrations: "migrations",
-				seeds: "seeds",
-			},
-			sequelize: { dialect: "mysql" },
-		});
+describe(loadConfig, () => {
+	it("returns undefined if configuration is not found", async () => {
+		mockExplorer.search = vi.fn().mockResolvedValueOnce(null);
+		mockExplorer.load = vi.fn().mockResolvedValueOnce(null);
+
+		await expect(loadConfig({})).resolves.toBeUndefined();
+		await expect(loadConfig({ config: "?" })).resolves.toBeUndefined();
 	});
 
-	it("throws on invalid configuration", async () => {
-		const config = {
-			sequelize: { dialect: "invalid-db" },
-		};
-		mockSearch.mockResolvedValue({ config });
+	it("returns undefined if configuration is empty", async () => {
+		mockExplorer.search = vi.fn().mockResolvedValueOnce({ isEmpty: true });
+		mockExplorer.load = vi.fn().mockResolvedValueOnce({ isEmpty: true });
 
-		await expect(getConfig()).rejects.toThrow(ZodError);
+		await expect(loadConfig({})).resolves.toBeUndefined();
+		await expect(loadConfig({ config: "?" })).resolves.toBeUndefined();
+	});
+
+	it("loads configuration", async () => {
+		const config = { sequelize: { dialect: "postgres" } };
+		const filepath = "sqlumz.config.ts";
+
+		mockExplorer.search = vi.fn().mockResolvedValueOnce({
+			config,
+			filepath,
+			isEmpty: false,
+		});
+		mockExplorer.load = vi.fn().mockResolvedValueOnce({
+			config,
+			filepath,
+			isEmpty: false,
+		});
+
+		await expect(loadConfig({})).resolves.toStrictEqual({
+			config,
+			meta: {
+				configPath: filepath,
+				configDir: dirname(filepath),
+			},
+		});
+		await expect(loadConfig({ config: filepath })).resolves.toStrictEqual({
+			config,
+			meta: {
+				configPath: filepath,
+				configDir: dirname(filepath),
+			},
+		});
 	});
 });
