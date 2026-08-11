@@ -6,36 +6,24 @@
 	"license": "MIT",
 	"author": "Ryan Suhartanto <suhartanto@kekkon.nexus>",
 	"repository": "ryansuhartanto/sqlumz",
-	"bin": "./dist/bin/index.mjs",
+	"bin": "./dist/bin/index.js",
 	"files": [
 		"./dist/"
 	],
 	"type": "module",
 	"imports": {
 		"#/*": {
-			"import": {
-				"types": "./dist/*.d.mts",
-				"default": "./dist/*.mjs"
-			},
-			"require": {
-				"types": "./dist/*.d.cts",
-				"default": "./dist/*.cjs"
-			},
-			"dev": "./src/*.ts"
+			"dev": "./src/*.ts",
+			"module-sync": "./dist/*.js",
+			"types": "./dist/*.d.ts"
 		},
 		"#/package.json": "./package.json"
 	},
 	"exports": {
 		".": {
-			"import": {
-				"types": "./dist/index.d.mts",
-				"default": "./dist/index.mjs"
-			},
-			"require": {
-				"types": "./dist/index.d.cts",
-				"default": "./dist/index.cjs"
-			},
-			"dev": "./src/index.ts"
+			"dev": "./src/index.ts",
+			"module-sync": "./dist/index.js",
+			"types": "./dist/index.d.ts"
 		}
 	},
 	"scripts": {

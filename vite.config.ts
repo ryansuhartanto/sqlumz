@@ -36,10 +36,16 @@ export default defineConfig({
 		conditions: ["dev"],
 	},
 
+	ssr: {
+		resolve: {
+			conditions: ["dev"],
+		},
+	},
+
 	pack: [
 		{
 			entry: ["src/**/*.ts", "!src/**/*.test.ts"],
-			format: ["esm", "cjs"],
+			fixedExtension: false,
 			sourcemap: true,
 
 			deps: {
@@ -50,6 +56,7 @@ export default defineConfig({
 			entry: {
 				"bin/index": "bin/index.ts",
 			},
+			fixedExtension: false,
 			sourcemap: true,
 
 			deps: {
