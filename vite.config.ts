@@ -24,7 +24,7 @@ export default defineConfig({
 			"vite-plus/prefer-vite-plus-imports": "error",
 			"no-relative-import-paths/no-relative-import-paths": [
 				"warn",
-				{ allowSameFolder: false, rootDir: `/src`, prefix: "#" },
+				{ allowSameFolder: false, rootDir: `./src`, prefix: "#" },
 			],
 		},
 	},
@@ -34,17 +34,23 @@ export default defineConfig({
 
 	pack: [
 		{
+			entry: ["src/**/*.ts", "!src/**/*.test.ts"],
 			format: ["esm", "cjs"],
 			sourcemap: true,
-			unbundle: true,
+
+			deps: {
+				neverBundle: [/^#/],
+			},
 		},
 		{
 			entry: {
 				"bin/*": "bin/*.ts",
 			},
-			format: "cjs",
 			sourcemap: true,
 
+			deps: {
+				neverBundle: ["sqlumz"],
+			},
 			dts: false,
 		},
 	],
