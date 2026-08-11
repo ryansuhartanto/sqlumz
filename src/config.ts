@@ -5,36 +5,22 @@ import type { ConfigLoadResult } from "@optique/config";
 import { AbstractDialect } from "@sequelize/core";
 import type { DialectName, Options } from "@sequelize/core";
 import { cosmiconfig } from "cosmiconfig";
-import type { Class } from "type-fest";
+import type { Class, UnionToTuple } from "type-fest";
 import z from "zod";
 
 import * as pkg from "#/pkg";
 
-export type { Class };
-
-type ExhaustiveTuple<T, U extends T[]> = [T] extends [U[number]]
-	? [U[number]] extends [T]
-		? U
-		: never
-	: never;
-
-const createDialectNames = <T extends DialectName[]>(
-	...args: ExhaustiveTuple<DialectName, T>
-) => args;
-
-const dialectNameSchema = z.enum(
-	createDialectNames(
-		"mysql",
-		"postgres",
-		"sqlite3",
-		"mariadb",
-		"mssql",
-		"db2",
-		"snowflake",
-		"ibmi",
-		"oracle",
-	),
-);
+const dialectNameSchema = z.enum([
+	"mysql",
+	"postgres",
+	"sqlite3",
+	"mariadb",
+	"mssql",
+	"db2",
+	"snowflake",
+	"ibmi",
+	"oracle",
+] satisfies UnionToTuple<DialectName>);
 
 const dialectClassSchema = z.custom<Class<AbstractDialect>>(
 	(val) =>
