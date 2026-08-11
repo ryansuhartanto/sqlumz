@@ -3,24 +3,15 @@ import { dirname } from "node:path";
 import { createConfigContext } from "@optique/config";
 import type { ConfigLoadResult } from "@optique/config";
 import { AbstractDialect } from "@sequelize/core";
-import type { DialectName, Options } from "@sequelize/core";
+import type { Options } from "@sequelize/core";
+import { SUPPORTED_DIALECTS } from "@sequelize/core/_non-semver-use-at-your-own-risk_/sequelize-typescript.js";
 import { cosmiconfig } from "cosmiconfig";
-import type { Class, UnionToTuple } from "type-fest";
+import type { Class } from "type-fest";
 import z from "zod";
 
 import * as pkg from "#/pkg";
 
-const dialectNameSchema = z.enum([
-	"mysql",
-	"postgres",
-	"sqlite3",
-	"mariadb",
-	"mssql",
-	"db2",
-	"snowflake",
-	"ibmi",
-	"oracle",
-] satisfies UnionToTuple<DialectName>);
+const dialectNameSchema = z.enum(SUPPORTED_DIALECTS);
 
 const dialectClassSchema = z.custom<Class<AbstractDialect>>(
 	(val) =>
