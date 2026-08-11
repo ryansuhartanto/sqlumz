@@ -1,34 +1,80 @@
 #!/usr/bin/env node
 // oxlint-disable no-console
 
-import { cli, define } from "gunshi";
-import { getConfig } from "sqlumz";
-import packageJson from "sqlumz/package.json" with { type: "json" };
+import { bindConfig } from "@optique/config";
+import type { ConfigLoadResult } from "@optique/config";
+import {
+	command,
+	fail,
+	group,
+	merge,
+	message,
+	multiple,
+	nonEmpty,
+	object,
+	option,
+	map,
+	optional,
+	or,
+	flag,
+} from "@optique/core";
+import { defineProgram } from "@optique/core/program";
+import { path, run } from "@optique/run";
+import { configContext, loadConfig, pkg } from "sqlumz";
 
-const command = define({
-	args: {
-		"config": {
-			type: "string",
-			short: "c",
-			description: "Specify custom configuration file",
-		},
-		"dump-config": {
-			type: "boolean",
-			short: "d",
-			description: "Dump parsed configuration",
-		},
+const globals = object(
+	{
+		config: optional(option("-c", "--config", path({ metavar: "CONFIG" }))),
+		verbosity: map(multiple(flag("-v", "--verbose")), (flags) => flags.length),
+
+		raw: bindConfig(fail<ConfigLoadResult>(), {
+			context: configContext,
+			key: (config, meta) => ({ config, meta }),
+		}),
 	},
-	async run(ctx) {
-		const config = await getConfig(ctx.values.config);
+	{
+		hidden: "usage",
+	},
+);
 
-		if (ctx.values["dump-config"]) {
-			console.log(config);
+const commands = group(
+	"Commands",
+	or(
+		command("init", object({}), {
+			description: message`Initialize configuration`,
+		}),
+	),
+);
+
+const parser = merge(group("Global flags", globals), nonEmpty(commands));
+
+const program = defineProgram({
+	parser,
+	metadata: {
+		name: pkg.name,
+		version: pkg.version,
+		description: pkg.description,
+	},
+});
+
+// oxlint-disable-next-line unicorn/prefer-top-level-await
+run(program, {
+	contexts: [configContext],
+	contextOptions: {
+		load: loadConfig,
+	},
+
+	help: "option",
+	version: "option",
+	completion: "option",
+})
+	// oxlint-disable-next-line promise/prefer-await-to-then promise/always-return
+	.then((result) => {
+		if (result.verbosity >= 2) {
+			console.log(result.raw);
 		}
-	},
-});
-
-await cli(process.argv.slice(2), command, {
-	name: packageJson.name,
-	description: packageJson.description,
-	version: packageJson.version,
-});
+	})
+	// oxlint-disable-next-line promise/prefer-await-to-then
+	.catch((error: unknown) => {
+		throw error;
+	});

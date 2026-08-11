@@ -8,9 +8,21 @@ importers:
 
   .:
     dependencies:
+      '@optique/config':
+        specifier: ^1.2.0
+        version: 1.2.0(@standard-schema/spec@1.1.0)
+      '@optique/core':
+        specifier: ^1.2.0
+        version: 1.2.0
+      '@optique/run':
+        specifier: ^1.2.0
+        version: 1.2.0
       '@sequelize/core':
         specifier: v7.0.0-alpha.48
         version: 7.0.0-alpha.48
+      '@standard-schema/spec':
+        specifier: ^1.1.0
+        version: 1.1.0
       cosmiconfig:
         specifier: ^10.0.0
         version: 10.0.0
@@ -203,6 +215,20 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@optique/config@1.2.0':
+    resolution: {integrity: sha512-hZ0THk7vw5ZDk1nTG7TRp/bz6uJfJASuQYWpMrjnb4ATdQqXdNT73pkDUSQkcFpdw9bVLWgs4ykmqSuVB+7LFA==}
+    engines: {bun: '>=1.2.0', deno: '>=2.3.0', node: '>=20.0.0'}
+    peerDependencies:
+      '@standard-schema/spec': ^1.1.0
+
+  '@optique/core@1.2.0':
+    resolution: {integrity: sha512-h3gHGe8BCo5iVpOt4CcWCmTnPDYdyys0XqOCCc5ZPA2A2S+GmupMkqYNeI57+SildteuGEgBrGP+MlwRlWdzPA==}
+    engines: {bun: '>=1.2.0', deno: '>=2.3.0', node: '>=20.0.0'}
+
+  '@optique/run@1.2.0':
+    resolution: {integrity: sha512-4H+sJbpKlB0DsFYyJmyTj2atDdF+9j14MbH99zPTK7YGQysWQ4Vo8UR1O91+ssIDUnKkMNoss7zMvaMf6A52Jw==}
+    engines: {bun: '>=1.2.0', deno: '>=2.3.0', node: '>=20.0.0'}
 
   '@oxc-project/runtime@0.142.0':
     resolution: {integrity: sha512-Dv3jRrcXFdvUBUEljUu9kusrEo9G0iiqZFZNg3yCg+mkET4DD4S2Ow6Q6shFWDJwPidSa980d6YVXBlErUGADw==}
@@ -2339,6 +2365,17 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
+
+  '@optique/config@1.2.0(@standard-schema/spec@1.1.0)':
+    dependencies:
+      '@optique/core': 1.2.0
+      '@standard-schema/spec': 1.1.0
+
+  '@optique/core@1.2.0': {}
+
+  '@optique/run@1.2.0':
+    dependencies:
+      '@optique/core': 1.2.0
 
   '@oxc-project/runtime@0.142.0': {}
 

@@ -16,7 +16,8 @@
 			"import": "./dist/*.mjs",
 			"require": "./dist/*.cjs",
 			"dev": "./src/*.ts"
-		}
+		},
+		"#/package.json": "./package.json"
 	},
 	"exports": {
 		".": {
@@ -29,8 +30,7 @@
 				"default": "./dist/index.cjs"
 			},
 			"dev": "./src/index.ts"
-		},
-		"./package.json": "./package.json"
+		}
 	},
 	"scripts": {
 		"build": "vp pack",
@@ -42,6 +42,9 @@
 		"run": "sqlumz"
 	},
 	"dependencies": {
+		"@optique/config": "^1.2.0",
+		"@optique/core": "^1.2.0",
+		"@optique/run": "^1.2.0",
 		"@sequelize/core": "v7.0.0-alpha.48",
 		"cosmiconfig": "^10.0.0",
 		"gunshi": "^0.37.1",

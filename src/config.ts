@@ -1,8 +1,14 @@
+import { dirname } from "node:path";
+
+import { createConfigContext } from "@optique/config";
+import type { ConfigLoadResult } from "@optique/config";
 import { AbstractDialect } from "@sequelize/core";
 import type { DialectName, Options } from "@sequelize/core";
 import { cosmiconfig } from "cosmiconfig";
 import type { Class } from "type-fest";
 import z from "zod";
+
+import * as pkg from "#/pkg";
 
 export type { Class };
 
@@ -50,17 +56,35 @@ export const configSchema = z.strictObject({
 });
 
 export function defineConfig(config: Config): Config {
-	return configSchema.parse(config);
+	return config;
 }
 
 export type Config = z.input<typeof configSchema>;
 
-const moduleName = "sqlumz";
-const explorer = cosmiconfig(moduleName);
+export const configContext = createConfigContext({
+	schema: configSchema,
+});
 
-export async function getConfig(
-	search?: string,
-): Promise<z.output<typeof configSchema>> {
-	const result = await explorer.search(search);
-	return configSchema.parse(result?.config);
+const explorer = cosmiconfig(pkg.name, {
+	searchStrategy: "project",
+});
+
+export async function loadConfig(parsed: {
+	config?: string;
+}): Promise<ConfigLoadResult | undefined> {
+	const found = await (parsed.config
+		? explorer.load(parsed.config)
+		: explorer.search());
+
+	if (!found || found.isEmpty) {
+		return;
+	}
+
+	return {
+		config: found.config as unknown,
+		meta: {
+			configPath: found.filepath,
+			configDir: dirname(found.filepath),
+		},
+	};
 }
