@@ -3,9 +3,6 @@ import { resolve } from "node:path";
 
 import { bindConfig } from "@optique/config";
 import {
-	choice,
-	command,
-	constant,
 	fail,
 	integer,
 	map,
@@ -15,12 +12,11 @@ import {
 	or,
 	string,
 } from "@optique/core";
-import type { InferValue, Message } from "@optique/core";
+import type { InferValue } from "@optique/core";
 import type { AbstractDialect, Options } from "@sequelize/core";
 
 import { configContext } from "#/config";
 import type { ProjectMeta } from "#/config";
-import { formatSchema } from "#/generate";
 import type { MigrationFormat, MigrationNaming } from "#/generate";
 
 function fromRootDir(meta: ProjectMeta | undefined, path: string): string {
@@ -79,21 +75,4 @@ export function runOptions() {
 /** `--to 0` reverts everything; umzug spells that as the number `0`. */
 export function undoOptions() {
 	return exclusive((to) => (to === "0" ? 0 : to));
-}
-
-export function generateCommand<const TAction extends string>(
-	action: TAction,
-	description: Message,
-) {
-	return command(
-		"generate",
-		object({
-			action: constant(action),
-			name: option("--name", string({ metavar: "NAME" })),
-			formatOverride: optional(
-				option("--format", choice(formatSchema.options)),
-			),
-		}),
-		{ description },
-	);
 }

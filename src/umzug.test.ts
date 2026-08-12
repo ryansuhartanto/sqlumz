@@ -16,7 +16,7 @@ const TABLES = ["alpha", "beta", "gamma"];
 let root: string;
 let options: {
 	sequelizeOptions: Options<AbstractDialect>;
-	migrationsPath: string;
+	folder: string;
 	logger: undefined;
 };
 
@@ -49,7 +49,7 @@ beforeEach(async () => {
 			dialect: SqliteDialect,
 			storage: join(root, "test.sqlite3"),
 		} as Options<AbstractDialect>,
-		migrationsPath,
+		folder: migrationsPath,
 		logger: undefined,
 	};
 });
@@ -84,6 +84,17 @@ describe(createUmzug, () => {
 		await expect(
 			createUmzug({ ...options, sequelizeOptions: undefined }),
 		).rejects.toThrow("No database configured");
+	});
+
+	it("tracks a separate modelName independently", async () => {
+		await run(options);
+
+		// same folder, different storage table: nothing has run as far as it knows
+		const seeds = { ...options, modelName: "SequelizeData" };
+		const { executed, pending } = await status(seeds);
+
+		expect(applied(executed)).toStrictEqual([]);
+		expect(applied(pending)).toStrictEqual(names);
 	});
 
 	it("routes migration events and sql through logtape", async () => {

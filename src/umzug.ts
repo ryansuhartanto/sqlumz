@@ -14,7 +14,10 @@ import type { UmzugContext } from "#/migrations";
 
 export type UmzugOptions = {
 	sequelizeOptions: Options<AbstractDialect> | undefined;
-	migrationsPath: string;
+	/** Directory of migrations or seeds to resolve. */
+	folder: string;
+	/** Storage table recording what ran. Defaults to umzug's `SequelizeMeta`. */
+	modelName?: string;
 	logger?: UmzugConstructorOptions["logger"];
 };
 
@@ -25,7 +28,8 @@ export type UndoOptions = MigrateDownOptions & UmzugOptions;
 // umzug's LogFn takes a bare property bag, which is one of LogTape's overloads
 export async function createUmzug({
 	sequelizeOptions,
-	migrationsPath,
+	folder,
+	modelName,
 	logger = getLogger(["sqlumz", "migration"]),
 }: UmzugOptions): Promise<{
 	umzug: Umzug<UmzugContext>;
@@ -48,9 +52,9 @@ export async function createUmzug({
 	});
 
 	const umzug = new Umzug<UmzugContext>({
-		migrations: await resolveMigrations(migrationsPath),
+		migrations: await resolveMigrations(folder),
 		context: { sequelize },
-		storage: new SequelizeStorage({ sequelize }),
+		storage: new SequelizeStorage({ sequelize, modelName }),
 		logger,
 	});
 
@@ -72,24 +76,26 @@ async function withUmzug<T>(
 
 export async function run({
 	sequelizeOptions,
-	migrationsPath,
+	folder,
+	modelName,
 	logger,
 	...migrate
 }: RunOptions): Promise<MigrationMeta[]> {
 	return withUmzug(
-		{ sequelizeOptions, migrationsPath, logger },
+		{ sequelizeOptions, folder, modelName, logger },
 		async (umzug) => umzug.up(migrate),
 	);
 }
 
 export async function undo({
 	sequelizeOptions,
-	migrationsPath,
+	folder,
+	modelName,
 	logger,
 	...migrate
 }: UndoOptions): Promise<MigrationMeta[]> {
 	return withUmzug(
-		{ sequelizeOptions, migrationsPath, logger },
+		{ sequelizeOptions, folder, modelName, logger },
 		async (umzug) => umzug.down(migrate),
 	);
 }

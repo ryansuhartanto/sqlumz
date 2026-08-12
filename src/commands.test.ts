@@ -49,23 +49,34 @@ async function cli(args: string[], config: Config = {}): Promise<CliResult> {
 describe("command parsing", () => {
 	it.each([
 		[["init"], { action: "init" }],
-		[["migration", "status"], { action: "migration:status" }],
-		[["migration", "run"], { action: "migration:run" }],
+		[["migration", "status"], { action: "migration", operation: "status" }],
+		[["migration", "run"], { action: "migration", operation: "run" }],
 		[
 			["migration", "run", "--step", "2"],
-			{ action: "migration:run", migrate: { step: 2 } },
+			{ action: "migration", operation: "run", migrate: { step: 2 } },
 		],
 		[
 			["migration", "undo", "--to", "0"],
-			{ action: "migration:undo", migrate: { to: 0 } },
+			{ action: "migration", operation: "undo", migrate: { to: 0 } },
 		],
 		[
 			["migration", "generate", "--name", "add users"],
-			{ action: "migration:generate", name: "add users" },
+			{ action: "migration", operation: "generate", name: "add users" },
 		],
+		[["seed", "run"], { action: "seed", operation: "run" }],
+		[
+			["seed", "undo", "--step", "2"],
+			{ action: "seed", operation: "undo", migrate: { step: 2 } },
+		],
+		[["seed", "status"], { action: "seed", operation: "status" }],
 		[
 			["seed", "generate", "--name", "a", "--format", "sql"],
-			{ action: "seed:generate", name: "a", formatOverride: "sql" },
+			{
+				action: "seed",
+				operation: "generate",
+				name: "a",
+				formatOverride: "sql",
+			},
 		],
 	])("parses %j", async (args, expected) => {
 		await expect(cli(args)).resolves.toMatchObject(expected);

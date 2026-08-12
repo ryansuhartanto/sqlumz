@@ -12,9 +12,15 @@ import { loggingOptions } from "@optique/logtape";
 import { path } from "@optique/run";
 
 import { initCommand } from "#/commands/init";
-import { executeMigration, migrationCommand } from "#/commands/migration";
-import { executeSeed, seedCommand } from "#/commands/seed";
+import {
+	executeResource,
+	migrationCommand,
+	seedCommand,
+} from "#/commands/resource";
 import { configOptions } from "#/commands/shared";
+
+/** Seeds get their own storage table so they do not read as pending migrations. */
+const SEED_MODEL = "SequelizeData";
 
 const globals = object(
 	{
@@ -42,13 +48,13 @@ export async function execute(result: CliResult): Promise<void> {
 		case "init":
 			return;
 
-		case "migration:run":
-		case "migration:undo":
-		case "migration:status":
-		case "migration:generate":
-			return executeMigration(result);
+		case "migration":
+			return executeResource(result, { folder: result.migrationsPath });
 
-		case "seed:generate":
-			return executeSeed(result);
+		case "seed":
+			return executeResource(result, {
+				folder: result.seedsPath,
+				modelName: SEED_MODEL,
+			});
 	}
 }
