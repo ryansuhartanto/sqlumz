@@ -9,6 +9,7 @@ import { cosmiconfig } from "cosmiconfig";
 import type { Class } from "type-fest";
 import z from "zod";
 
+import { formatSchema, namingSchema } from "#/generate";
 import * as pkg from "#/pkg";
 
 const dialectNameSchema = z.enum(SUPPORTED_DIALECTS);
@@ -23,7 +24,9 @@ const sequelizeSchema = z.object({
 }) satisfies z.ZodType<Options<AbstractDialect>>;
 
 export const configSchema = z.strictObject({
-	naming: z.enum(["timestamp", "sequence"]).default("timestamp"),
+	// TODO: default to "ts" only when the project has a tsconfig, "js" otherwise.
+	format: formatSchema.default("ts"),
+	naming: namingSchema.default("timestamp"),
 	path: z
 		.object({
 			migrations: z.string().default("migrations"),

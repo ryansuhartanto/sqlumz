@@ -1,11 +1,17 @@
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import z from "zod";
+
 import { getCurrentTimestamp, nextSequence, slugify } from "#/utils";
 
-export type MigrationFormat = "sql" | "ts" | "js";
+export const formatSchema = z.enum(["sql", "ts", "js"]);
 
-export type MigrationNaming = "timestamp" | "sequence";
+export const namingSchema = z.enum(["timestamp", "sequence"]);
+
+export type MigrationFormat = z.infer<typeof formatSchema>;
+
+export type MigrationNaming = z.infer<typeof namingSchema>;
 
 export type GenerateOptions = {
 	format: MigrationFormat;

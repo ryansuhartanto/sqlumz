@@ -18,7 +18,7 @@ export async function executeSeed(
 	result: SeedResult & ConfigValues,
 ): Promise<void> {
 	const created = await generate({
-		format: result.format,
+		format: result.formatOverride ?? result.format,
 		name: result.name,
 		naming: result.naming,
 		targetPath: result.seedsPath,

@@ -28,6 +28,7 @@ describe(configSchema.parse, () => {
 		const config = { sequelize: { dialect: "postgres" } };
 
 		expect(configSchema.parse(config)).toStrictEqual({
+			format: "ts",
 			naming: "timestamp",
 			path: {
 				migrations: "migrations",

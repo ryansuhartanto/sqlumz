@@ -96,7 +96,7 @@ export async function executeMigration(
 
 		case "migration:generate": {
 			const created = await generate({
-				format: result.format,
+				format: result.formatOverride ?? result.format,
 				name: result.name,
 				naming: result.naming,
 				targetPath: migrationsPath,

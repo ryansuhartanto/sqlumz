@@ -23,6 +23,8 @@ afterEach(async () => {
 
 /** Drives the real parser, resolving config through the context the CLI uses. */
 async function cli(args: string[], config: Config = {}): Promise<CliResult> {
+	const diagnostics: string[] = [];
+
 	return runCli(parser, {
 		args,
 		programName: "sqlumz",
@@ -33,9 +35,9 @@ async function cli(args: string[], config: Config = {}): Promise<CliResult> {
 				meta: { configPath: join(root, "sqlumz.config.ts"), configDir: root },
 			}),
 		},
-		stderr: () => {},
+		stderr: (text) => diagnostics.push(text),
 		onExit: (code: number) => {
-			throw new Error(`exited ${code}`);
+			throw new Error(`exited ${code}: ${diagnostics.join(" / ")}`);
 		},
 	});
 }
@@ -49,11 +51,11 @@ describe("command parsing", () => {
 		[["migration", "undo", "--to", "0"], { action: "migration:undo", to: "0" }],
 		[
 			["migration", "generate", "--name", "add users"],
-			{ action: "migration:generate", name: "add users", format: "ts" },
+			{ action: "migration:generate", name: "add users" },
 		],
 		[
 			["seed", "generate", "--name", "a", "--format", "sql"],
-			{ action: "seed:generate", name: "a", format: "sql" },
+			{ action: "seed:generate", name: "a", formatOverride: "sql" },
 		],
 	])("parses %j", async (args, expected) => {
 		await expect(cli(args)).resolves.toMatchObject(expected);
@@ -90,6 +92,15 @@ describe("config binding", () => {
 		).resolves.toMatchObject({ naming: "sequence" });
 	});
 
+	it("takes the scaffold format from the config", async () => {
+		await expect(cli(["migration", "status"])).resolves.toMatchObject({
+			format: "ts",
+		});
+		await expect(
+			cli(["migration", "status"], { format: "js" }),
+		).resolves.toMatchObject({ format: "js" });
+	});
+
 	it("survives an absent sequelize entry", async () => {
 		const result = await cli(["migration", "status"]);
 
@@ -106,6 +117,19 @@ describe("config binding", () => {
 });
 
 describe(execute, () => {
+	it("lets --format override the configured format", async () => {
+		const config = { format: "js", naming: "sequence" } as const;
+		const generate = ["migration", "generate", "--name", "a"];
+
+		await execute(await cli(generate, config));
+		await execute(await cli([...generate, "--format", "ts"], config));
+
+		await expect(readdir(join(root, "migrations"))).resolves.toStrictEqual([
+			"0000000001-a.js",
+			"0000000002-a.ts",
+		]);
+	});
+
 	it("scaffolds into the migrations path", async () => {
 		const config = { naming: "sequence" } as const;
 

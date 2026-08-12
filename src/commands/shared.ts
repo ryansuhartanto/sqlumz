@@ -13,12 +13,12 @@ import {
 	option,
 	optional,
 	string,
-	withDefault,
 } from "@optique/core";
 import type { InferValue, Message } from "@optique/core";
 import type { AbstractDialect, Options } from "@sequelize/core";
 
 import { configContext } from "#/config";
+import { formatSchema } from "#/generate";
 import type { MigrationFormat, MigrationNaming } from "#/generate";
 
 // TODO: relative paths resolve against the config file's directory, which is wrong
@@ -36,6 +36,12 @@ export const configOptions = object({
 	seedsPath: bindConfig(fail<string>(), {
 		context: configContext,
 		key: (config, meta) => fromConfigDir(meta, config.path.seeds),
+	}),
+	// bound here rather than on the `generate` subcommand: bindConfig's config
+	// fallback does not resolve inside a command branch, only at the top level
+	format: bindConfig(fail<MigrationFormat>(), {
+		context: configContext,
+		key: "format",
 	}),
 	naming: bindConfig(fail<MigrationNaming>(), {
 		context: configContext,
@@ -70,10 +76,8 @@ export function generateCommand<const TAction extends string>(
 		object({
 			action: constant(action),
 			name: option("--name", string({ metavar: "NAME" })),
-			// TODO: default to "ts" only when the project has a tsconfig, "js" otherwise.
-			format: withDefault(
-				option("--format", choice<MigrationFormat>(["sql", "ts", "js"])),
-				"ts" as const,
+			formatOverride: optional(
+				option("--format", choice(formatSchema.options)),
 			),
 		}),
 		{ description },
