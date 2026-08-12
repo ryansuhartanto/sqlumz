@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 
 import { AbstractDialect } from "@sequelize/core";
 import { SUPPORTED_DIALECTS } from "@sequelize/core/_non-semver-use-at-your-own-risk_/sequelize-typescript.js";
+import { SqliteDialect } from "@sequelize/sqlite3";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { ZodError } from "zod";
 
@@ -57,6 +58,35 @@ describe(configSchema.parse, () => {
 
 		expect(() => configSchema.parse(config)).toThrow(ZodError);
 	});
+
+	it("retains dialect-specific connection options instead of stripping them", () => {
+		const config = {
+			sequelize: { dialect: "sqlite3", storage: "/tmp/x.sqlite" },
+		};
+
+		expect(configSchema.parse(config).sequelize).toStrictEqual({
+			dialect: "sqlite3",
+			storage: "/tmp/x.sqlite",
+		});
+	});
+
+	it("retains multiple dialect-specific connection options", () => {
+		const config = {
+			sequelize: { dialect: "postgres", host: "db.example", port: 5432 },
+		};
+
+		expect(configSchema.parse(config).sequelize).toStrictEqual({
+			dialect: "postgres",
+			host: "db.example",
+			port: 5432,
+		});
+	});
+
+	it("rejects unknown top-level keys", () => {
+		const config = { notAConfigKey: true };
+
+		expect(() => configSchema.parse(config)).toThrow(ZodError);
+	});
 });
 
 describe(defineConfig, () => {
@@ -64,6 +94,33 @@ describe(defineConfig, () => {
 		const config = { sequelize: { dialect: "mysql" } } as const;
 
 		expect(defineConfig(config)).toStrictEqual(config);
+	});
+
+	it("accepts a dialect class with its connection options", () => {
+		const config = defineConfig({
+			sequelize: { dialect: SqliteDialect, storage: "./db.sqlite" },
+		});
+
+		expect(config.sequelize).toStrictEqual({
+			dialect: SqliteDialect,
+			storage: "./db.sqlite",
+		});
+	});
+
+	it("accepts a dialect name with its connection options", () => {
+		const config = defineConfig({
+			sequelize: { dialect: "postgres", host: "localhost", port: 5432 },
+		});
+
+		expect(config.sequelize).toStrictEqual({
+			dialect: "postgres",
+			host: "localhost",
+			port: 5432,
+		});
+	});
+
+	it("accepts an empty configuration", () => {
+		expect(defineConfig({})).toStrictEqual({});
 	});
 });
 

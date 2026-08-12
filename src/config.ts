@@ -20,7 +20,10 @@ const dialectClassSchema = z.custom<Class<AbstractDialect>>(
 		typeof val === "function" && val.prototype instanceof AbstractDialect,
 );
 
-const sequelizeSchema = z.object({
+// looseObject: dialect-specific connection options (`storage`, `host`, `port`,
+// ...) aren't known to this schema, so unknown keys must pass through instead
+// of being stripped
+const sequelizeSchema = z.looseObject({
 	dialect: z.union([dialectNameSchema, dialectClassSchema]),
 }) satisfies z.ZodType<Options<AbstractDialect>>;
 
