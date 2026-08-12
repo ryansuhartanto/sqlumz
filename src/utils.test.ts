@@ -26,7 +26,7 @@ describe(getCurrentTimestamp, () => {
 		vi.useRealTimers();
 	});
 
-	it("formats the current time as 10 digits", () => {
+	it("formats the current time as 12 digits", () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2020-10-20T12:34:56.789Z"));
 

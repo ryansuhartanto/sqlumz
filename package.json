@@ -48,6 +48,7 @@
 	"devDependencies": {
 		"@commitlint/cli": "^21.2.1",
 		"@kekkon-nexus/config": "^2.260806.0",
+		"@sequelize/sqlite3": "7.0.0-alpha.48",
 		"@types/node": "^26.1.2",
 		"eslint-plugin-no-relative-import-paths": "^1.6.1",
 		"oxfmt": ">=0.62.0 <1",

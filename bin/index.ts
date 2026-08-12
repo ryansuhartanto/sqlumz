@@ -2,32 +2,30 @@
 // oxlint-disable no-console
 
 import { bindConfig } from "@optique/config";
-import type { ConfigLoadResult } from "@optique/config";
 import {
-	command,
 	fail,
+	flag,
 	group,
+	map,
 	merge,
 	message,
 	multiple,
 	nonEmpty,
 	object,
 	option,
-	map,
 	optional,
-	or,
-	flag,
 } from "@optique/core";
 import { defineProgram } from "@optique/core/program";
 import { path, run } from "@optique/run";
-import { configContext, loadConfig, pkg } from "sqlumz";
+import { commands, configContext, execute, loadConfig, pkg } from "sqlumz";
+import type { ConfigResult } from "sqlumz";
 
 const globals = object(
 	{
 		config: optional(option("-c", "--config", path({ metavar: "CONFIG" }))),
 		verbosity: map(multiple(flag("-v", "--verbose")), (flags) => flags.length),
 
-		raw: bindConfig(fail<ConfigLoadResult>(), {
+		raw: bindConfig(fail<ConfigResult>(), {
 			context: configContext,
 			key: (config, meta) => ({ config, meta }),
 		}),
@@ -37,15 +35,6 @@ const globals = object(
 	},
 );
 
-const commands = group(
-	"Commands",
-	or(
-		command("init", object({}), {
-			description: message`Initialize configuration`,
-		}),
-	),
-);
-
 const parser = merge(group("Global flags", globals), nonEmpty(commands));
 
 const program = defineProgram({
@@ -53,7 +42,7 @@ const program = defineProgram({
 	metadata: {
 		name: pkg.name,
 		version: pkg.version,
-		description: pkg.description,
+		description: message`${pkg.description}`,
 	},
 });
 
@@ -69,10 +58,12 @@ run(program, {
 	completion: "option",
 })
 	// oxlint-disable-next-line promise/prefer-await-to-then promise/always-return
-	.then((result) => {
+	.then(async (result) => {
 		if (result.verbosity >= 2) {
 			console.log(result.raw);
 		}
+
+		await execute(result, result.raw);
 	})
 	// oxlint-disable-next-line promise/prefer-await-to-then
 	.catch((error: unknown) => {

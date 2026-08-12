@@ -1,7 +1,7 @@
 import { dirname } from "node:path";
 
 import { createConfigContext } from "@optique/config";
-import type { ConfigLoadResult } from "@optique/config";
+import type { ConfigLoadResult, ConfigMeta } from "@optique/config";
 import { AbstractDialect } from "@sequelize/core";
 import type { Options } from "@sequelize/core";
 import { SUPPORTED_DIALECTS } from "@sequelize/core/_non-semver-use-at-your-own-risk_/sequelize-typescript.js";
@@ -23,13 +23,14 @@ const sequelizeSchema = z.object({
 }) satisfies z.ZodType<Options<AbstractDialect>>;
 
 export const configSchema = z.strictObject({
+	naming: z.enum(["timestamp", "sequence"]).default("timestamp"),
 	path: z
 		.object({
 			migrations: z.string().default("migrations"),
 			seeds: z.string().default("seeds"),
 		})
 		.prefault({}),
-	sequelize: sequelizeSchema satisfies z.ZodType<Options<AbstractDialect>>,
+	sequelize: sequelizeSchema.optional(),
 });
 
 export function defineConfig(config: Config): Config {
@@ -37,6 +38,13 @@ export function defineConfig(config: Config): Config {
 }
 
 export type Config = z.input<typeof configSchema>;
+
+export type ResolvedConfig = z.output<typeof configSchema>;
+
+export type ConfigResult = {
+	config: ResolvedConfig;
+	meta: ConfigMeta | undefined;
+};
 
 export const configContext = createConfigContext({
 	schema: configSchema,
