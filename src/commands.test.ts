@@ -117,6 +117,12 @@ describe("config binding", () => {
 });
 
 describe(execute, () => {
+	it.each(["run", "undo"])("rejects --to with --step on %s", async (action) => {
+		const result = await cli(["migration", action, "--to", "a", "--step", "1"]);
+
+		await expect(execute(result)).rejects.toThrow("not both");
+	});
+
 	it("lets --format override the configured format", async () => {
 		const config = { format: "js", naming: "sequence" } as const;
 		const generate = ["migration", "generate", "--name", "a"];

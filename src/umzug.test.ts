@@ -109,9 +109,11 @@ describe(run, () => {
 		);
 	});
 
-	it("rejects `to` together with `step`", async () => {
-		await expect(run({ ...options, to: names[1], step: 1 })).rejects.toThrow(
-			"not both",
+	it("runs specific migrations by name", async () => {
+		const migrations = [names[0]!, names[2]!];
+
+		expect(applied(await run({ ...options, migrations }))).toStrictEqual(
+			migrations,
 		);
 	});
 });
@@ -144,9 +146,11 @@ describe(undo, () => {
 		);
 	});
 
-	it("rejects `to` together with `step`", async () => {
-		await expect(undo({ ...options, to: names[1], step: 1 })).rejects.toThrow(
-			"not both",
+	it("reverts specific migrations by name", async () => {
+		const migrations = [names[2]!, names[0]!];
+
+		expect(applied(await undo({ ...options, migrations }))).toStrictEqual(
+			migrations,
 		);
 	});
 });

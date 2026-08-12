@@ -6,7 +6,6 @@ import { generateCommand, stepOptions } from "#/commands/shared";
 import type { ConfigValues } from "#/commands/shared";
 import { generate } from "#/generate";
 import { run, status, undo } from "#/umzug";
-import type { UndoOptions } from "#/umzug";
 
 export const migrationCommand = command(
 	"migration",
@@ -32,8 +31,28 @@ export const migrationCommand = command(
 export type MigrationResult = InferValue<typeof migrationCommand>;
 
 /** `--to 0` reverts everything; umzug spells that as the number `0`. */
-function undoTarget(to: string | undefined): UndoOptions["to"] {
+function undoTarget(to: string | undefined): string | 0 | undefined {
 	return to === "0" ? 0 : to;
+}
+
+/** Two independent flags collapse into one mutually exclusive umzug option. */
+function migrateOptions<TTo extends string | 0>(
+	to: TTo | undefined,
+	step: number | undefined,
+): { to: TTo } | { step: number } | Record<string, never> {
+	if (to !== undefined && step !== undefined) {
+		throw new Error(`Pass either "--to" or "--step", not both.`);
+	}
+
+	if (to !== undefined) {
+		return { to };
+	}
+
+	if (step !== undefined) {
+		return { step };
+	}
+
+	return {};
 }
 
 function printNames(names: Array<{ name: string }>, empty: string): void {
@@ -59,8 +78,7 @@ export async function executeMigration(
 				await run({
 					sequelizeOptions,
 					migrationsPath,
-					to: result.to,
-					step: result.step,
+					...migrateOptions(result.to, result.step),
 				}),
 				"Nothing to run.",
 			);
@@ -72,8 +90,7 @@ export async function executeMigration(
 				await undo({
 					sequelizeOptions,
 					migrationsPath,
-					to: undoTarget(result.to),
-					step: result.step,
+					...migrateOptions(undoTarget(result.to), result.step),
 				}),
 				"Nothing to undo.",
 			);

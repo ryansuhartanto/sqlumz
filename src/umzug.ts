@@ -2,6 +2,8 @@ import { Sequelize } from "@sequelize/core";
 import type { AbstractDialect, Options } from "@sequelize/core";
 import { SequelizeStorage, Umzug } from "umzug";
 import type {
+	MigrateDownOptions,
+	MigrateUpOptions,
 	MigrationMeta,
 	UmzugOptions as UmzugConstructorOptions,
 } from "umzug";
@@ -15,16 +17,9 @@ export type UmzugOptions = {
 	logger?: UmzugConstructorOptions["logger"];
 };
 
-export type StepOptions = {
-	to?: string;
-	step?: number;
-} & UmzugOptions;
+export type RunOptions = MigrateUpOptions & UmzugOptions;
 
-export type UndoOptions = {
-	/** `0` reverts every executed migration. */
-	to?: string | 0;
-	step?: number;
-} & UmzugOptions;
+export type UndoOptions = MigrateDownOptions & UmzugOptions;
 
 export async function createUmzug({
 	sequelizeOptions,
@@ -66,47 +61,27 @@ async function withUmzug<T>(
 }
 
 export async function run({
-	to,
-	step,
-	...options
-}: StepOptions): Promise<MigrationMeta[]> {
-	if (to !== undefined && step !== undefined) {
-		throw new Error(`Pass either "to" or "step", not both.`);
-	}
-
-	return withUmzug(options, async (umzug) => {
-		if (to !== undefined) {
-			return umzug.up({ to });
-		}
-
-		if (step !== undefined) {
-			return umzug.up({ step });
-		}
-
-		return umzug.up();
-	});
+	sequelizeOptions,
+	migrationsPath,
+	logger,
+	...migrate
+}: RunOptions): Promise<MigrationMeta[]> {
+	return withUmzug(
+		{ sequelizeOptions, migrationsPath, logger },
+		async (umzug) => umzug.up(migrate),
+	);
 }
 
 export async function undo({
-	to,
-	step,
-	...options
+	sequelizeOptions,
+	migrationsPath,
+	logger,
+	...migrate
 }: UndoOptions): Promise<MigrationMeta[]> {
-	if (to !== undefined && step !== undefined) {
-		throw new Error(`Pass either "to" or "step", not both.`);
-	}
-
-	return withUmzug(options, async (umzug) => {
-		if (to !== undefined) {
-			return umzug.down({ to });
-		}
-
-		if (step !== undefined) {
-			return umzug.down({ step });
-		}
-
-		return umzug.down();
-	});
+	return withUmzug(
+		{ sequelizeOptions, migrationsPath, logger },
+		async (umzug) => umzug.down(migrate),
+	);
 }
 
 export async function status(
