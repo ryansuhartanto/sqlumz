@@ -3,6 +3,8 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
+import { configure, reset } from "@logtape/logtape";
+import type { LogRecord } from "@logtape/logtape";
 import {
 	afterEach,
 	beforeEach,
@@ -208,27 +210,75 @@ describe(generate, () => {
 			expect(basename(created)).toBe(STAMP);
 		});
 
-		it("rejects and writes nothing when emptyName is error", async () => {
+		it("rejects and creates nothing, not even the target folder, when emptyName is error", async () => {
+			const targetPath = join(root, "migrations");
+
 			await expect(
 				generate({
 					format: "ts",
 					name: "!!!",
 					emptyName: "error",
-					targetPath: root,
+					targetPath,
 				}),
 			).rejects.toThrow(/empty string/);
 
 			await expect(readdir(root)).resolves.toStrictEqual([]);
 		});
 
-		it("still produces the file when emptyName is warn (the default)", async () => {
-			const created = await generate({
-				format: "ts",
-				name: "!!!",
-				targetPath: root,
+		async function captureLogs(
+			fn: () => Promise<unknown>,
+		): Promise<LogRecord[]> {
+			const records: LogRecord[] = [];
+
+			await configure({
+				sinks: { capture: (record) => records.push(record) },
+				loggers: [
+					{ category: ["sqlumz"], lowestLevel: "debug", sinks: ["capture"] },
+				],
+			});
+
+			try {
+				await fn();
+			} finally {
+				await reset();
+			}
+
+			return records;
+		}
+
+		it("still produces the file and logs a warning when emptyName is warn (the default)", async () => {
+			let created = "";
+			const records = await captureLogs(async () => {
+				created = await generate({
+					format: "ts",
+					name: "!!!",
+					targetPath: root,
+				});
 			});
 
 			expect(basename(created)).toBe(`${STAMP}.ts`);
+			expect(
+				records.some(
+					(record) => record.category.join(".") === "sqlumz.generate",
+				),
+			).toBe(true);
+		});
+
+		it("logs nothing when emptyName is silent", async () => {
+			const records = await captureLogs(async () => {
+				await generate({
+					format: "ts",
+					name: "!!!",
+					emptyName: "silent",
+					targetPath: root,
+				});
+			});
+
+			expect(
+				records.some(
+					(record) => record.category.join(".") === "sqlumz.generate",
+				),
+			).toBe(false);
 		});
 
 		it("leaves a normal name unaffected", async () => {

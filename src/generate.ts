@@ -98,6 +98,14 @@ export async function generate({
 	emptyName = "warn",
 	targetPath,
 }: GenerateOptions): Promise<string> {
+	const slug = slugify(name);
+
+	if (slug === "" && emptyName === "error") {
+		throw new Error(
+			`Name "${name}" slugifies to an empty string; refusing to generate (emptyName: "error").`,
+		);
+	}
+
 	await mkdir(targetPath, { recursive: true });
 
 	const prefix =
@@ -105,21 +113,11 @@ export async function generate({
 			? nextSequence(await readdir(targetPath))
 			: getCurrentTimestamp();
 
-	const slug = slugify(name);
-
-	if (slug === "") {
-		if (emptyName === "error") {
-			throw new Error(
-				`Name "${name}" slugifies to an empty string; refusing to generate (emptyName: "error").`,
-			);
-		}
-
-		if (emptyName === "warn") {
-			getLogger(["sqlumz", "generate"]).warn(
-				`Name {name} slugifies to an empty string; generating {prefix} with no slug.`,
-				{ name, prefix },
-			);
-		}
+	if (slug === "" && emptyName === "warn") {
+		getLogger(["sqlumz", "generate"]).warn(
+			`Name {name} slugifies to an empty string; generating {prefix} with no slug.`,
+			{ name, prefix },
+		);
 	}
 
 	const base = slug === "" ? prefix : `${prefix}-${slug}`;
