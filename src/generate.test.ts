@@ -34,7 +34,7 @@ describe(generate, () => {
 	it("creates a missing target folder", async () => {
 		const targetPath = join(root, "migrations");
 
-		await generate({ format: "typescript", name: "a", targetPath });
+		await generate({ format: "ts", name: "a", targetPath });
 
 		await expect(readdir(targetPath)).resolves.toStrictEqual([`${STAMP}-a.ts`]);
 	});
@@ -59,9 +59,9 @@ describe(generate, () => {
 		}
 	});
 
-	it("writes a typed skeleton for typescript", async () => {
+	it("writes a typed skeleton for ts", async () => {
 		const created = await generate({
-			format: "typescript",
+			format: "ts",
 			name: "a",
 			targetPath: root,
 		});
@@ -73,15 +73,15 @@ describe(generate, () => {
 		expect(contents).toContain("export async function down(");
 	});
 
-	it("writes a jsdoc-annotated skeleton for esm", async () => {
+	it("writes a jsdoc-annotated skeleton for js", async () => {
 		const created = await generate({
-			format: "esm",
+			format: "js",
 			name: "a",
 			targetPath: root,
 		});
 		const contents = await readFile(created, "utf8");
 
-		expect(basename(created)).toBe(`${STAMP}-a.mjs`);
+		expect(basename(created)).toBe(`${STAMP}-a.js`);
 		expect(
 			contents.match(/@type \{import\("sqlumz"\)\.MigrationFunction\}/g),
 		).toHaveLength(2);
@@ -89,19 +89,19 @@ describe(generate, () => {
 
 	it("numbers from one and increments when naming is sequence", async () => {
 		const first = await generate({
-			format: "esm",
+			format: "js",
 			name: "a",
 			naming: "sequence",
 			targetPath: root,
 		});
 		const second = await generate({
-			format: "esm",
+			format: "js",
 			name: "b",
 			naming: "sequence",
 			targetPath: root,
 		});
 
-		expect(basename(first)).toBe("0000000001-a.mjs");
-		expect(basename(second)).toBe("0000000002-b.mjs");
+		expect(basename(first)).toBe("0000000001-a.js");
+		expect(basename(second)).toBe("0000000002-b.js");
 	});
 });

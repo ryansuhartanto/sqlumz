@@ -43,12 +43,10 @@ export function generateCommand<const TAction extends string>(
 		object({
 			action: constant(action),
 			name: option("--name", string({ metavar: "NAME" })),
+			// TODO: default to "ts" only when the project has a tsconfig, "js" otherwise.
 			format: withDefault(
-				option(
-					"--format",
-					choice<MigrationFormat>(["sql", "typescript", "esm"]),
-				),
-				"typescript" as const,
+				option("--format", choice<MigrationFormat>(["sql", "ts", "js"])),
+				"ts" as const,
 			),
 		}),
 		{ description },

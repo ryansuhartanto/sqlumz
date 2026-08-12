@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { getCurrentTimestamp, nextSequence, slugify } from "#/utils";
 
-export type MigrationFormat = "sql" | "typescript" | "esm";
+export type MigrationFormat = "sql" | "ts" | "js";
 
 export type MigrationNaming = "timestamp" | "sequence";
 
@@ -19,10 +19,10 @@ export type GenerateOptions = {
 };
 
 const SQL_HEADER = `-- Split on ";" and run in one transaction.
--- Needs triggers, procedures, or semicolons inside strings? Use a .ts/.mjs migration.
+-- Needs triggers, procedures, or semicolons inside strings? Use a .ts/.js migration.
 `;
 
-const TYPESCRIPT_SKELETON = `import type { UmzugContext } from "sqlumz";
+const TS_SKELETON = `import type { UmzugContext } from "sqlumz";
 
 export async function up({ sequelize }: UmzugContext): Promise<void> {
 }
@@ -31,7 +31,7 @@ export async function down({ sequelize }: UmzugContext): Promise<void> {
 }
 `;
 
-const ESM_SKELETON = `/** @type {import("sqlumz").MigrationFunction} */
+const JS_SKELETON = `/** @type {import("sqlumz").MigrationFunction} */
 export async function up({ sequelize }) {
 }
 
@@ -67,15 +67,9 @@ export async function generate({
 		return folder;
 	}
 
-	const file = join(
-		targetPath,
-		format === "typescript" ? `${base}.ts` : `${base}.mjs`,
-	);
+	const file = join(targetPath, `${base}.${format}`);
 
-	await writeFile(
-		file,
-		format === "typescript" ? TYPESCRIPT_SKELETON : ESM_SKELETON,
-	);
+	await writeFile(file, format === "ts" ? TS_SKELETON : JS_SKELETON);
 
 	return file;
 }

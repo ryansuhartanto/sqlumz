@@ -48,7 +48,7 @@ describe("command parsing", () => {
 		[["migration", "undo", "--to", "0"], { action: "migration:undo", to: "0" }],
 		[
 			["migration", "generate", "--name", "add users"],
-			{ action: "migration:generate", name: "add users", format: "typescript" },
+			{ action: "migration:generate", name: "add users", format: "ts" },
 		],
 		[
 			["seed", "generate", "--name", "a", "--format", "sql"],
