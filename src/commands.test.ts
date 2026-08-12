@@ -3,40 +3,41 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { parseSync } from "@optique/core";
+import { run as runCli } from "@optique/run";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 
-import { commands, execute } from "#/commands";
-import type { CommandResult } from "#/commands";
-import type { ConfigResult } from "#/config";
+import { execute, parser } from "#/commands";
+import type { CliResult } from "#/commands";
+import { configContext } from "#/config";
+import type { Config } from "#/config";
 
 let root: string;
-let raw: ConfigResult;
 
 beforeEach(async () => {
 	root = await mkdtemp(join(tmpdir(), "sqlumz-commands-"));
-
-	raw = {
-		config: {
-			naming: "sequence",
-			path: { migrations: "migrations", seeds: "seeds" },
-		},
-		meta: { configDir: root, configPath: join(root, "sqlumz.config.ts") },
-	};
 });
 
 afterEach(async () => {
 	await rm(root, { force: true, recursive: true });
 });
 
-function parse(args: string[]): CommandResult {
-	const result = parseSync(commands, args);
-
-	if (!result.success) {
-		throw new Error(JSON.stringify(result.error));
-	}
-
-	return result.value;
+/** Drives the real parser, resolving config through the context the CLI uses. */
+async function cli(args: string[], config: Config = {}): Promise<CliResult> {
+	return runCli(parser, {
+		args,
+		programName: "sqlumz",
+		contexts: [configContext],
+		contextOptions: {
+			load: () => ({
+				config,
+				meta: { configPath: join(root, "sqlumz.config.ts"), configDir: root },
+			}),
+		},
+		stderr: () => {},
+		onExit: (code: number) => {
+			throw new Error(`exited ${code}`);
+		},
+	});
 }
 
 describe("command parsing", () => {
@@ -54,18 +55,63 @@ describe("command parsing", () => {
 			["seed", "generate", "--name", "a", "--format", "sql"],
 			{ action: "seed:generate", name: "a", format: "sql" },
 		],
-	])("parses %j", (args, expected) => {
-		expect(parse(args)).toMatchObject(expected);
+	])("parses %j", async (args, expected) => {
+		await expect(cli(args)).resolves.toMatchObject(expected);
 	});
 
-	it("rejects generate without a name", () => {
-		expect(parseSync(commands, ["seed", "generate"]).success).toBe(false);
+	it("rejects generate without a name", async () => {
+		await expect(cli(["seed", "generate"])).rejects.toThrow("exited");
+	});
+});
+
+describe("config binding", () => {
+	it("resolves paths against the config directory", async () => {
+		await expect(cli(["migration", "status"])).resolves.toMatchObject({
+			migrationsPath: join(root, "migrations"),
+			seedsPath: join(root, "seeds"),
+		});
+	});
+
+	it("honours overridden paths", async () => {
+		const config = { path: { migrations: "db/up", seeds: "db/seed" } };
+
+		await expect(cli(["migration", "status"], config)).resolves.toMatchObject({
+			migrationsPath: join(root, "db/up"),
+			seedsPath: join(root, "db/seed"),
+		});
+	});
+
+	it("falls back to the schema default for naming", async () => {
+		await expect(cli(["migration", "status"])).resolves.toMatchObject({
+			naming: "timestamp",
+		});
+		await expect(
+			cli(["migration", "status"], { naming: "sequence" }),
+		).resolves.toMatchObject({ naming: "sequence" });
+	});
+
+	it("survives an absent sequelize entry", async () => {
+		const result = await cli(["migration", "status"]);
+
+		expect(result.sequelize).toStrictEqual({ options: undefined });
+	});
+
+	it("passes a configured sequelize entry through", async () => {
+		const config = { sequelize: { dialect: "postgres" } } as const;
+
+		await expect(cli(["migration", "status"], config)).resolves.toMatchObject({
+			sequelize: { options: { dialect: "postgres" } },
+		});
 	});
 });
 
 describe(execute, () => {
 	it("scaffolds into the migrations path", async () => {
-		await execute(parse(["migration", "generate", "--name", "add users"]), raw);
+		const config = { naming: "sequence" } as const;
+
+		await execute(
+			await cli(["migration", "generate", "--name", "add users"], config),
+		);
 
 		await expect(readdir(join(root, "migrations"))).resolves.toStrictEqual([
 			"0000000001-add-users.ts",
@@ -73,9 +119,10 @@ describe(execute, () => {
 	});
 
 	it("scaffolds into the seeds path", async () => {
+		const config = { naming: "sequence" } as const;
+
 		await execute(
-			parse(["seed", "generate", "--name", "a", "--format", "sql"]),
-			raw,
+			await cli(["seed", "generate", "--name", "a", "--format", "sql"], config),
 		);
 
 		await expect(

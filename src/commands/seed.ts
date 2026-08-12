@@ -2,8 +2,8 @@ import { command, message, text } from "@optique/core";
 import type { InferValue } from "@optique/core";
 import { print } from "@optique/run";
 
-import { generateCommand, targetPath } from "#/commands/shared";
-import type { ConfigResult } from "#/config";
+import { generateCommand } from "#/commands/shared";
+import type { ConfigValues } from "#/commands/shared";
 import { generate } from "#/generate";
 
 export const seedCommand = command(
@@ -15,14 +15,13 @@ export const seedCommand = command(
 export type SeedResult = InferValue<typeof seedCommand>;
 
 export async function executeSeed(
-	result: SeedResult,
-	raw: ConfigResult,
+	result: SeedResult & ConfigValues,
 ): Promise<void> {
 	const created = await generate({
 		format: result.format,
 		name: result.name,
-		naming: raw.config.naming,
-		targetPath: targetPath(raw, "seeds"),
+		naming: result.naming,
+		targetPath: result.seedsPath,
 	});
 
 	print(message`${text(created)}`);

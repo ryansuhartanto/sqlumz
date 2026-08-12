@@ -2,8 +2,8 @@ import { command, constant, message, object, or, text } from "@optique/core";
 import type { InferValue } from "@optique/core";
 import { print } from "@optique/run";
 
-import { generateCommand, stepOptions, targetPath } from "#/commands/shared";
-import type { ConfigResult } from "#/config";
+import { generateCommand, stepOptions } from "#/commands/shared";
+import type { ConfigValues } from "#/commands/shared";
 import { generate } from "#/generate";
 import { run, status, undo } from "#/umzug";
 import type { UndoOptions } from "#/umzug";
@@ -48,11 +48,10 @@ function printNames(names: Array<{ name: string }>, empty: string): void {
 }
 
 export async function executeMigration(
-	result: MigrationResult,
-	raw: ConfigResult,
+	result: MigrationResult & ConfigValues,
 ): Promise<void> {
-	const migrationsPath = targetPath(raw, "migrations");
-	const sequelizeOptions = raw.config.sequelize;
+	const { migrationsPath } = result;
+	const sequelizeOptions = result.sequelize.options;
 
 	switch (result.action) {
 		case "migration:run":
@@ -99,7 +98,7 @@ export async function executeMigration(
 			const created = await generate({
 				format: result.format,
 				name: result.name,
-				naming: raw.config.naming,
+				naming: result.naming,
 				targetPath: migrationsPath,
 			});
 

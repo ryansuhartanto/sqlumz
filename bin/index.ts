@@ -1,41 +1,10 @@
 #!/usr/bin/env node
 // oxlint-disable no-console
 
-import { bindConfig } from "@optique/config";
-import {
-	fail,
-	flag,
-	group,
-	map,
-	merge,
-	message,
-	multiple,
-	nonEmpty,
-	object,
-	option,
-	optional,
-} from "@optique/core";
+import { message } from "@optique/core";
 import { defineProgram } from "@optique/core/program";
-import { path, run } from "@optique/run";
-import { commands, configContext, execute, loadConfig, pkg } from "sqlumz";
-import type { ConfigResult } from "sqlumz";
-
-const globals = object(
-	{
-		config: optional(option("-c", "--config", path({ metavar: "CONFIG" }))),
-		verbosity: map(multiple(flag("-v", "--verbose")), (flags) => flags.length),
-
-		raw: bindConfig(fail<ConfigResult>(), {
-			context: configContext,
-			key: (config, meta) => ({ config, meta }),
-		}),
-	},
-	{
-		hidden: "usage",
-	},
-);
-
-const parser = merge(group("Global flags", globals), nonEmpty(commands));
+import { run } from "@optique/run";
+import { configContext, execute, loadConfig, parser, pkg } from "sqlumz";
 
 const program = defineProgram({
 	parser,
@@ -60,10 +29,10 @@ run(program, {
 	// oxlint-disable-next-line promise/prefer-await-to-then promise/always-return
 	.then(async (result) => {
 		if (result.verbosity >= 2) {
-			console.log(result.raw);
+			console.log(result);
 		}
 
-		await execute(result, result.raw);
+		await execute(result);
 	})
 	// oxlint-disable-next-line promise/prefer-await-to-then
 	.catch((error: unknown) => {

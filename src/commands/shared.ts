@@ -1,10 +1,13 @@
 // oxlint-disable typescript/explicit-module-boundary-types - optique parser types are unwriteable
 import { resolve } from "node:path";
 
+import { bindConfig } from "@optique/config";
+import type { ConfigMeta } from "@optique/config";
 import {
 	choice,
 	command,
 	constant,
+	fail,
 	integer,
 	object,
 	option,
@@ -12,20 +15,44 @@ import {
 	string,
 	withDefault,
 } from "@optique/core";
-import type { Message } from "@optique/core";
+import type { InferValue, Message } from "@optique/core";
+import type { AbstractDialect, Options } from "@sequelize/core";
 
-import type { ConfigResult } from "#/config";
-import type { MigrationFormat } from "#/generate";
+import { configContext } from "#/config";
+import type { MigrationFormat, MigrationNaming } from "#/generate";
 
 // TODO: relative paths resolve against the config file's directory, which is wrong
 // when the config lives at `.config/sqlumzrc.ts` — it should resolve against the
 // project root. Fixing it belongs in config loading, not here.
-export function targetPath(
-	raw: ConfigResult,
-	key: "migrations" | "seeds",
-): string {
-	return resolve(raw.meta?.configDir ?? process.cwd(), raw.config.path[key]);
+function fromConfigDir(meta: ConfigMeta | undefined, path: string): string {
+	return resolve(meta?.configDir ?? process.cwd(), path);
 }
+
+export const configOptions = object({
+	migrationsPath: bindConfig(fail<string>(), {
+		context: configContext,
+		key: (config, meta) => fromConfigDir(meta, config.path.migrations),
+	}),
+	seedsPath: bindConfig(fail<string>(), {
+		context: configContext,
+		key: (config, meta) => fromConfigDir(meta, config.path.seeds),
+	}),
+	naming: bindConfig(fail<MigrationNaming>(), {
+		context: configContext,
+		key: "naming",
+	}),
+	// wrapped: bindConfig reads an `undefined` accessor result as "missing" and
+	// fails the parse, but `sequelize` is legitimately absent when scaffolding
+	sequelize: bindConfig(
+		fail<{ options: Options<AbstractDialect> | undefined }>(),
+		{
+			context: configContext,
+			key: (config) => ({ options: config.sequelize }),
+		},
+	),
+});
+
+export type ConfigValues = InferValue<typeof configOptions>;
 
 export function stepOptions() {
 	return {
