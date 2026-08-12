@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { command, constant, message, object, text } from "@optique/core";
 import { print } from "@optique/run";
 
-import { loadConfig } from "#/config";
+import { clearConfigSearchCache, loadConfig } from "#/config";
 import { isEsmProject } from "#/utils";
 
 export const initCommand = command(
@@ -51,5 +51,6 @@ export async function executeInit(): Promise<void> {
 	const file = join(process.cwd(), CONFIG_FILE);
 
 	await writeFile(file, buildConfigTemplate(esm));
+	clearConfigSearchCache();
 	print(message`${text(file)}`);
 }

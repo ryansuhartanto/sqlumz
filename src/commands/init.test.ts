@@ -50,13 +50,17 @@ describe(executeInit, () => {
 	});
 
 	it("does not overwrite an existing config", async () => {
-		await executeInit();
-		const before = await readFile(join(root, "sqlumz.config.ts"), "utf8");
+		// sentinel: buildConfigTemplate never emits this, so the test only
+		// passes if the write was actually skipped, not merely idempotent
+		const sentinel = "export default { sequelize: { dialect: 'mysql' } };\n";
+
+		await writeFile(join(root, "sqlumz.config.ts"), sentinel);
 
 		await executeInit();
-		const after = await readFile(join(root, "sqlumz.config.ts"), "utf8");
 
-		expect(after).toBe(before);
+		await expect(
+			readFile(join(root, "sqlumz.config.ts"), "utf8"),
+		).resolves.toBe(sentinel);
 	});
 
 	it("emits require()/module.exports for a CommonJS project", async () => {

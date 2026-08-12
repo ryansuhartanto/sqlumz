@@ -57,13 +57,16 @@ export const configContext = createConfigContext<ResolvedConfig, ProjectMeta>({
 	schema: configSchema,
 });
 
-// cache: false — a fresh CLI process only ever searches once or twice, and a
-// stale "not found" entry would be wrong for `init`, which checks for a
-// config and then writes one in the same run
 const explorer = cosmiconfig(pkg.name, {
 	searchStrategy: "project",
-	cache: false,
 });
+
+// `init` writes a config file after searching for one in the same process;
+// call this right after so a later `loadConfig` doesn't see the stale
+// "not found" cosmiconfig cached from before the write.
+export function clearConfigSearchCache(): void {
+	explorer.clearSearchCache();
+}
 
 export async function loadConfig(parsed: {
 	config?: string;
