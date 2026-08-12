@@ -36,10 +36,9 @@ jobs:
       - uses: actions/attest@v4
         with:
           subject-path: ${{ env.PACKAGE }}
-      - uses: jdx/aube-action@v1
-      - run: aubx pkg-pr-new publish ${{ env.PACKAGE }}
 
+      - run: npx pkg-pr-new publish ${{ env.PACKAGE }}
       - if: startsWith(github.ref, 'refs/tags/v')
-        run: aube publish ${{ env.PACKAGE }}
+        run: npm publish ${{ env.PACKAGE }}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
