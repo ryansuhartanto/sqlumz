@@ -2,7 +2,31 @@
 	"name": "sqlumz",
 	"version": "0.1.0",
 	"description": "Easy Sequelize v7 migration and seed.",
-	"bugs": "https://github.com/ryansuhartanto/sqlumz",
+	"keywords": [
+		"cli",
+		"database",
+		"db2",
+		"ibmi",
+		"mariadb",
+		"migration",
+		"migrations",
+		"mssql",
+		"mysql",
+		"oracle",
+		"orm",
+		"postgres",
+		"postgresql",
+		"seed",
+		"seeder",
+		"sequelize",
+		"snowflake",
+		"sql",
+		"sqlite3",
+		"typescript",
+		"umzug"
+	],
+	"homepage": "https://github.com/ryansuhartanto/sqlumz#readme",
+	"bugs": "https://github.com/ryansuhartanto/sqlumz/issues",
 	"license": "MIT",
 	"author": "Ryan Suhartanto <suhartanto@kekkon.nexus>",
 	"repository": "ryansuhartanto/sqlumz",
@@ -11,6 +35,7 @@
 		"./dist/"
 	],
 	"type": "module",
+	"sideEffects": false,
 	"imports": {
 		"#/*": {
 			"dev": "./src/*.ts",
@@ -63,5 +88,8 @@
 		"type-fest": "^5.8.0",
 		"typescript": "^7.0.2",
 		"vite-plus": "^0.2.8"
+	},
+	"engines": {
+		"node": "^22.18.0 || >=24"
 	}
 }
