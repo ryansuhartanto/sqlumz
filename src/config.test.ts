@@ -1,4 +1,4 @@
-// oxlint-disable jest/valid-title
+// oxlint-disable vitest/valid-title
 import { dirname } from "node:path";
 
 import { AbstractDialect } from "@sequelize/core";

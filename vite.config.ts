@@ -32,10 +32,13 @@ export default defineConfig({
 		"*": "vp check --fix --no-error-on-unmatched-pattern",
 	},
 
+	run: {
+		cache: true,
+	},
+
 	resolve: {
 		conditions: ["dev"],
 	},
-
 	ssr: {
 		resolve: {
 			conditions: ["dev"],
@@ -65,4 +68,9 @@ export default defineConfig({
 			dts: false,
 		},
 	],
+	test: {
+		experimental: {
+			fsModuleCache: true,
+		},
+	},
 });
