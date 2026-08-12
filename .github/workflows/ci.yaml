@@ -37,6 +37,7 @@ jobs:
         with:
           subject-path: ${{ env.PACKAGE }}
 
+      - run: npm install -g npm@latest
       - run: npx pkg-pr-new publish ${{ env.PACKAGE }}
       - if: startsWith(github.ref, 'refs/tags/v')
         run: npm publish ${{ env.PACKAGE }}
