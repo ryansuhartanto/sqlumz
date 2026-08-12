@@ -3,6 +3,8 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { configure, reset } from "@logtape/logtape";
+import type { LogRecord } from "@logtape/logtape";
 import type { AbstractDialect, Options } from "@sequelize/core";
 import { SqliteDialect } from "@sequelize/sqlite3";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
@@ -82,6 +84,28 @@ describe(createUmzug, () => {
 		await expect(
 			createUmzug({ ...options, sequelizeOptions: undefined }),
 		).rejects.toThrow("No database configured");
+	});
+
+	it("routes migration events and sql through logtape", async () => {
+		const records: LogRecord[] = [];
+
+		await configure({
+			sinks: { capture: (record) => records.push(record) },
+			loggers: [
+				{ category: ["sqlumz"], lowestLevel: "debug", sinks: ["capture"] },
+			],
+		});
+
+		try {
+			await run(options);
+		} finally {
+			await reset();
+		}
+
+		const categories = records.map((record) => record.category.join("."));
+
+		expect(categories).toContain("sqlumz.migration");
+		expect(categories).toContain("sqlumz.sequelize");
 	});
 });
 

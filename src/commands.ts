@@ -1,9 +1,6 @@
 import {
-	flag,
 	group,
-	map,
 	merge,
-	multiple,
 	nonEmpty,
 	object,
 	option,
@@ -11,6 +8,7 @@ import {
 	or,
 } from "@optique/core";
 import type { InferValue } from "@optique/core";
+import { loggingOptions } from "@optique/logtape";
 import { path } from "@optique/run";
 
 import { initCommand } from "#/commands/init";
@@ -21,7 +19,7 @@ import { configOptions } from "#/commands/shared";
 const globals = object(
 	{
 		config: optional(option("-c", "--config", path({ metavar: "CONFIG" }))),
-		verbosity: map(multiple(flag("-v", "--verbose")), (flags) => flags.length),
+		logging: loggingOptions({ level: "verbosity" }),
 	},
 	{ hidden: "usage" },
 );

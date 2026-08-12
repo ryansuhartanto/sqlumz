@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@logtape/logtape':
+        specifier: ^2.3.0
+        version: 2.3.0
       '@optique/config':
         specifier: ^1.2.0
         version: 1.2.0(@standard-schema/spec@1.1.0)
       '@optique/core':
         specifier: ^1.2.0
         version: 1.2.0
+      '@optique/logtape':
+        specifier: ^1.2.0
+        version: 1.2.0(@logtape/logtape@2.3.0)
       '@optique/run':
         specifier: ^1.2.0
         version: 1.2.0
@@ -207,6 +213,9 @@ packages:
       oxlint-tsgolint:
         optional: true
 
+  '@logtape/logtape@2.3.0':
+    resolution: {integrity: sha512-s/pxCgf9Gg75ypTV/bRUq355Dy/JP/zUJWfgJQPO5pTkXC23X2AXBcmBBgFiWH+bSi4yiX/G06qGV8CdAWD3SA==}
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -236,6 +245,16 @@ packages:
   '@optique/core@1.2.0':
     resolution: {integrity: sha512-h3gHGe8BCo5iVpOt4CcWCmTnPDYdyys0XqOCCc5ZPA2A2S+GmupMkqYNeI57+SildteuGEgBrGP+MlwRlWdzPA==}
     engines: {bun: '>=1.2.0', deno: '>=2.3.0', node: '>=20.0.0'}
+
+  '@optique/logtape@1.2.0':
+    resolution: {integrity: sha512-bzinVaWd75QKNoLy3eYffLY3dIajtxtmaZcPrpFIB5RVGCNfOBiBGn+fhVYOH6mZ4XaiByGa7Ly04iKX08+KNA==}
+    engines: {bun: '>=1.2.0', deno: '>=2.3.0', node: '>=20.0.0'}
+    peerDependencies:
+      '@logtape/file': ^2.2.2
+      '@logtape/logtape': ^2.2.2
+    peerDependenciesMeta:
+      '@logtape/file':
+        optional: true
 
   '@optique/run@1.2.0':
     resolution: {integrity: sha512-4H+sJbpKlB0DsFYyJmyTj2atDdF+9j14MbH99zPTK7YGQysWQ4Vo8UR1O91+ssIDUnKkMNoss7zMvaMf6A52Jw==}
@@ -2767,6 +2786,8 @@ snapshots:
       - '@standard-config/oxlint-react'
       - '@standard-config/oxlint-stylistic'
 
+  '@logtape/logtape@2.3.0': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -2797,6 +2818,11 @@ snapshots:
       '@standard-schema/spec': 1.1.0
 
   '@optique/core@1.2.0': {}
+
+  '@optique/logtape@1.2.0(@logtape/logtape@2.3.0)':
+    dependencies:
+      '@logtape/logtape': 2.3.0
+      '@optique/core': 1.2.0
 
   '@optique/run@1.2.0':
     dependencies:

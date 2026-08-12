@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// oxlint-disable no-console
 
+import { configure } from "@logtape/logtape";
 import { message } from "@optique/core";
 import { defineProgram } from "@optique/core/program";
+import { createLoggingConfig } from "@optique/logtape";
 import { run } from "@optique/run";
 import { configContext, execute, loadConfig, parser, pkg } from "sqlumz";
 
@@ -28,9 +29,7 @@ run(program, {
 })
 	// oxlint-disable-next-line promise/prefer-await-to-then promise/always-return
 	.then(async (result) => {
-		if (result.verbosity >= 2) {
-			console.log(result);
-		}
+		await configure(await createLoggingConfig(result.logging));
 
 		await execute(result);
 	})

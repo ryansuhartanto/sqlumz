@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { Sequelize } from "@sequelize/core";
 import type { AbstractDialect, Options } from "@sequelize/core";
 import { SequelizeStorage, Umzug } from "umzug";
@@ -21,10 +22,11 @@ export type RunOptions = MigrateUpOptions & UmzugOptions;
 
 export type UndoOptions = MigrateDownOptions & UmzugOptions;
 
+// umzug's LogFn takes a bare property bag, which is one of LogTape's overloads
 export async function createUmzug({
 	sequelizeOptions,
 	migrationsPath,
-	logger,
+	logger = getLogger(["sqlumz", "migration"]),
 }: UmzugOptions): Promise<{
 	umzug: Umzug<UmzugContext>;
 	sequelize: Sequelize;
@@ -35,7 +37,15 @@ export async function createUmzug({
 		);
 	}
 
-	const sequelize = new Sequelize(sequelizeOptions);
+	const sql = getLogger(["sqlumz", "sequelize"]);
+
+	// spread last so a caller-supplied `logging` wins
+	const sequelize = new Sequelize({
+		benchmark: true,
+		logging: (statement, timing) =>
+			sql.debug("{statement}", { statement, duration: `${timing}ms` }),
+		...sequelizeOptions,
+	});
 
 	const umzug = new Umzug<UmzugContext>({
 		migrations: await resolveMigrations(migrationsPath),

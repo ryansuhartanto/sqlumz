@@ -114,6 +114,15 @@ describe("config binding", () => {
 		).resolves.toMatchObject({ format: "js" });
 	});
 
+	it("raises the log level per -v flag", async () => {
+		await expect(cli(["migration", "status"])).resolves.toMatchObject({
+			logging: { logLevel: "warning" },
+		});
+		await expect(cli(["migration", "status", "-vv"])).resolves.toMatchObject({
+			logging: { logLevel: "debug" },
+		});
+	});
+
 	it("survives an absent sequelize entry", async () => {
 		const result = await cli(["migration", "status"]);
 

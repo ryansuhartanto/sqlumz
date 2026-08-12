@@ -36,8 +36,10 @@
 		"run": "sqlumz"
 	},
 	"dependencies": {
+		"@logtape/logtape": "^2.3.0",
 		"@optique/config": "^1.2.0",
 		"@optique/core": "^1.2.0",
+		"@optique/logtape": "^1.2.0",
 		"@optique/run": "^1.2.0",
 		"@sequelize/core": "v7.0.0-alpha.48",
 		"cosmiconfig": "^10.0.0",
