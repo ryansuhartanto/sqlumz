@@ -12,9 +12,10 @@ import {
 	object,
 	option,
 	optional,
+	or,
 	string,
 } from "@optique/core";
-import type { InferValue, Message } from "@optique/core";
+import type { InferValue, Message, Mode, Parser } from "@optique/core";
 import type { AbstractDialect, Options } from "@sequelize/core";
 
 import { configContext } from "#/config";
@@ -60,11 +61,19 @@ export const configOptions = object({
 
 export type ConfigValues = InferValue<typeof configOptions>;
 
-export function stepOptions() {
-	return {
-		to: optional(option("--to", string({ metavar: "NAME" }))),
-		step: optional(option("--step", integer({ metavar: "N" }))),
-	};
+/** `or` makes `--to` and `--step` mutually exclusive at parse time, matching
+ * umzug's `MergeExclusive` option shape so the value forwards as-is. */
+export function migrateOptions<M extends Mode, T, S>(to: Parser<M, T, S>) {
+	return optional(
+		or(
+			object({ to }),
+			object({ step: option("--step", integer({ metavar: "N" })) }),
+		),
+	);
+}
+
+export function targetOption() {
+	return option("--to", string({ metavar: "NAME" }));
 }
 
 export function generateCommand<const TAction extends string>(

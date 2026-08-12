@@ -47,8 +47,14 @@ describe("command parsing", () => {
 		[["init"], { action: "init" }],
 		[["migration", "status"], { action: "migration:status" }],
 		[["migration", "run"], { action: "migration:run" }],
-		[["migration", "run", "--step", "2"], { action: "migration:run", step: 2 }],
-		[["migration", "undo", "--to", "0"], { action: "migration:undo", to: "0" }],
+		[
+			["migration", "run", "--step", "2"],
+			{ action: "migration:run", migrate: { step: 2 } },
+		],
+		[
+			["migration", "undo", "--to", "0"],
+			{ action: "migration:undo", migrate: { to: 0 } },
+		],
 		[
 			["migration", "generate", "--name", "add users"],
 			{ action: "migration:generate", name: "add users" },
@@ -63,6 +69,13 @@ describe("command parsing", () => {
 
 	it("rejects generate without a name", async () => {
 		await expect(cli(["seed", "generate"])).rejects.toThrow("exited");
+	});
+
+	it.each(["run", "undo"])("rejects --to with --step on %s", async (action) => {
+		const args = ["migration", action, "--to", "a", "--step", "1"];
+
+		// a usage error from the parser, not a crash out of the handler
+		await expect(cli(args)).rejects.toThrow("Usage:");
 	});
 });
 
@@ -117,12 +130,6 @@ describe("config binding", () => {
 });
 
 describe(execute, () => {
-	it.each(["run", "undo"])("rejects --to with --step on %s", async (action) => {
-		const result = await cli(["migration", action, "--to", "a", "--step", "1"]);
-
-		await expect(execute(result)).rejects.toThrow("not both");
-	});
-
 	it("lets --format override the configured format", async () => {
 		const config = { format: "js", naming: "sequence" } as const;
 		const generate = ["migration", "generate", "--name", "a"];

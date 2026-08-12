@@ -1,8 +1,20 @@
-import { command, constant, message, object, or, text } from "@optique/core";
+import {
+	command,
+	constant,
+	map,
+	message,
+	object,
+	or,
+	text,
+} from "@optique/core";
 import type { InferValue } from "@optique/core";
 import { print } from "@optique/run";
 
-import { generateCommand, stepOptions } from "#/commands/shared";
+import {
+	generateCommand,
+	migrateOptions,
+	targetOption,
+} from "#/commands/shared";
 import type { ConfigValues } from "#/commands/shared";
 import { generate } from "#/generate";
 import { run, status, undo } from "#/umzug";
@@ -12,12 +24,21 @@ export const migrationCommand = command(
 	or(
 		command(
 			"run",
-			object({ action: constant("migration:run"), ...stepOptions() }),
+			object({
+				action: constant("migration:run"),
+				migrate: migrateOptions(targetOption()),
+			}),
 			{ description: message`Apply pending migrations` },
 		),
 		command(
 			"undo",
-			object({ action: constant("migration:undo"), ...stepOptions() }),
+			object({
+				action: constant("migration:undo"),
+				// `--to 0` reverts everything; umzug spells that as the number `0`
+				migrate: migrateOptions(
+					map(targetOption(), (to) => (to === "0" ? 0 : to)),
+				),
+			}),
 			{ description: message`Revert executed migrations` },
 		),
 		command("status", object({ action: constant("migration:status") }), {
@@ -29,31 +50,6 @@ export const migrationCommand = command(
 );
 
 export type MigrationResult = InferValue<typeof migrationCommand>;
-
-/** `--to 0` reverts everything; umzug spells that as the number `0`. */
-function undoTarget(to: string | undefined): string | 0 | undefined {
-	return to === "0" ? 0 : to;
-}
-
-/** Two independent flags collapse into one mutually exclusive umzug option. */
-function migrateOptions<TTo extends string | 0>(
-	to: TTo | undefined,
-	step: number | undefined,
-): { to: TTo } | { step: number } | Record<string, never> {
-	if (to !== undefined && step !== undefined) {
-		throw new Error(`Pass either "--to" or "--step", not both.`);
-	}
-
-	if (to !== undefined) {
-		return { to };
-	}
-
-	if (step !== undefined) {
-		return { step };
-	}
-
-	return {};
-}
 
 function printNames(names: Array<{ name: string }>, empty: string): void {
 	if (names.length === 0) {
@@ -78,7 +74,7 @@ export async function executeMigration(
 				await run({
 					sequelizeOptions,
 					migrationsPath,
-					...migrateOptions(result.to, result.step),
+					...result.migrate,
 				}),
 				"Nothing to run.",
 			);
@@ -90,7 +86,7 @@ export async function executeMigration(
 				await undo({
 					sequelizeOptions,
 					migrationsPath,
-					...migrateOptions(undoTarget(result.to), result.step),
+					...result.migrate,
 				}),
 				"Nothing to undo.",
 			);
