@@ -3,9 +3,22 @@ import { join } from "node:path";
 
 import z from "zod";
 
-import { getCurrentTimestamp, nextSequence, slugify } from "#/utils";
+import {
+	getCurrentTimestamp,
+	isEsmProject,
+	nextSequence,
+	slugify,
+} from "#/utils";
 
-export const formatSchema = z.enum(["sql", "ts", "js"]);
+export const formatSchema = z.enum([
+	"sql",
+	"js",
+	"ts",
+	"mjs",
+	"cjs",
+	"mts",
+	"cts",
+]);
 
 export const namingSchema = z.enum(["timestamp", "sequence"]);
 
@@ -28,23 +41,48 @@ const SQL_HEADER = `-- Split on ";" and run in one transaction.
 -- Needs triggers, procedures, or semicolons inside strings? Use a .ts/.js migration.
 `;
 
-const TS_SKELETON = `import type { UmzugContext } from "sqlumz";
+const CONTEXT_TYPE_IMPORT = `import type { UmzugContext } from "sqlumz";\n\n`;
 
-export async function up({ sequelize }: UmzugContext): Promise<void> {
+const FUNCTION_TYPE_DOC = `/** @type {import("sqlumz").MigrationFunction} */\n`;
+
+type Language = "js" | "ts";
+type ModuleSystem = "esm" | "cjs";
+
+function moduleFunction(
+	name: "up" | "down",
+	language: Language,
+	moduleSystem: ModuleSystem,
+): string {
+	const param =
+		language === "ts" ? "{ sequelize }: UmzugContext" : "{ sequelize }";
+	const returnType = language === "ts" ? ": Promise<void>" : "";
+	const doc = language === "js" ? FUNCTION_TYPE_DOC : "";
+
+	return moduleSystem === "esm"
+		? `${doc}export async function ${name}(${param})${returnType} {\n}\n`
+		: `${doc}exports.${name} = async function ${name}(${param})${returnType} {\n};\n`;
 }
 
-export async function down({ sequelize }: UmzugContext): Promise<void> {
-}
-`;
+function buildSkeleton(language: Language, moduleSystem: ModuleSystem): string {
+	const header = language === "ts" ? CONTEXT_TYPE_IMPORT : "";
 
-const JS_SKELETON = `/** @type {import("sqlumz").MigrationFunction} */
-export async function up({ sequelize }) {
+	return `${header}${moduleFunction("up", language, moduleSystem)}\n${moduleFunction("down", language, moduleSystem)}`;
 }
 
-/** @type {import("sqlumz").MigrationFunction} */
-export async function down({ sequelize }) {
-}
-`;
+const FORMAT_SYNTAX: Record<
+	Exclude<MigrationFormat, "sql">,
+	{ language: Language; moduleSystem: ModuleSystem | "auto" }
+> = {
+	js: { language: "js", moduleSystem: "auto" },
+	ts: { language: "ts", moduleSystem: "auto" },
+	mjs: { language: "js", moduleSystem: "esm" },
+	mts: { language: "ts", moduleSystem: "esm" },
+	cjs: { language: "js", moduleSystem: "cjs" },
+	// cts: type stripping erases `import type` but doesn't rewrite `export`,
+	// which is invalid in a .cts file — CJS output is required despite the
+	// TS-flavored annotation.
+	cts: { language: "ts", moduleSystem: "cjs" },
+};
 
 export async function generate({
 	format,
@@ -74,8 +112,16 @@ export async function generate({
 	}
 
 	const file = join(targetPath, `${base}.${format}`);
+	const { language, moduleSystem } = FORMAT_SYNTAX[format];
+	let resolvedModuleSystem: ModuleSystem;
 
-	await writeFile(file, format === "ts" ? TS_SKELETON : JS_SKELETON);
+	if (moduleSystem === "auto") {
+		resolvedModuleSystem = (await isEsmProject(targetPath)) ? "esm" : "cjs";
+	} else {
+		resolvedModuleSystem = moduleSystem;
+	}
+
+	await writeFile(file, buildSkeleton(language, resolvedModuleSystem));
 
 	return file;
 }

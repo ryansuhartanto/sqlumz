@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
+
 export function slugify(text: string): string {
 	return text
 		.normalize("NFKD")
@@ -30,4 +33,28 @@ export function splitSql(sql: string): string[] {
 		.split(";")
 		.map((statement) => statement.trim())
 		.filter(Boolean);
+}
+
+export async function isEsmProject(startDir: string): Promise<boolean> {
+	let dir = resolve(startDir);
+
+	while (true) {
+		try {
+			const raw = await readFile(join(dir, "package.json"), "utf8");
+
+			return (JSON.parse(raw) as { type?: unknown }).type === "module";
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+				return false;
+			}
+		}
+
+		const parent = dirname(dir);
+
+		if (parent === dir) {
+			return false;
+		}
+
+		dir = parent;
+	}
 }

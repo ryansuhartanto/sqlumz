@@ -1,7 +1,24 @@
 // oxlint-disable vitest/valid-title
-import { describe, it, expect, vi, afterEach } from "vite-plus/test";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { getCurrentTimestamp, nextSequence, slugify, splitSql } from "#/utils";
+import {
+	describe,
+	it,
+	expect,
+	vi,
+	afterEach,
+	beforeEach,
+} from "vite-plus/test";
+
+import {
+	getCurrentTimestamp,
+	isEsmProject,
+	nextSequence,
+	slugify,
+	splitSql,
+} from "#/utils";
 
 describe(slugify, () => {
 	it("lowercases and hyphenates", () => {
@@ -66,5 +83,61 @@ describe(splitSql, () => {
 
 	it("drops empty statements", () => {
 		expect(splitSql(";;  ;")).toStrictEqual([]);
+	});
+});
+
+describe(isEsmProject, () => {
+	let root: string;
+
+	beforeEach(async () => {
+		root = await mkdtemp(join(tmpdir(), "sqlumz-utils-"));
+	});
+
+	afterEach(async () => {
+		await rm(root, { force: true, recursive: true });
+	});
+
+	it("reports false when no package.json exists up to the filesystem root", async () => {
+		await expect(isEsmProject(root)).resolves.toBe(false);
+	});
+
+	it("reports true when the nearest package.json has type module", async () => {
+		await writeFile(
+			join(root, "package.json"),
+			JSON.stringify({ type: "module" }),
+		);
+
+		await expect(isEsmProject(root)).resolves.toBe(true);
+	});
+
+	it("reports false when type is commonjs or absent", async () => {
+		await writeFile(
+			join(root, "package.json"),
+			JSON.stringify({ type: "commonjs" }),
+		);
+
+		await expect(isEsmProject(root)).resolves.toBe(false);
+
+		await writeFile(join(root, "package.json"), JSON.stringify({}));
+
+		await expect(isEsmProject(root)).resolves.toBe(false);
+	});
+
+	it("walks up from a nested directory with no package.json of its own", async () => {
+		await writeFile(
+			join(root, "package.json"),
+			JSON.stringify({ type: "module" }),
+		);
+
+		const nested = join(root, "migrations");
+		await mkdir(nested);
+
+		await expect(isEsmProject(nested)).resolves.toBe(true);
+	});
+
+	it("treats invalid JSON as commonjs instead of throwing", async () => {
+		await writeFile(join(root, "package.json"), "{ not valid json");
+
+		await expect(isEsmProject(root)).resolves.toBe(false);
 	});
 });

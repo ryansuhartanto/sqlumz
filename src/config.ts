@@ -28,7 +28,6 @@ const sequelizeSchema = z.looseObject({
 }) satisfies z.ZodType<Options<AbstractDialect>>;
 
 export const configSchema = z.strictObject({
-	// TODO: default to "ts" only when the project has a tsconfig, "js" otherwise.
 	format: formatSchema.default("ts"),
 	naming: namingSchema.default("timestamp"),
 	path: z

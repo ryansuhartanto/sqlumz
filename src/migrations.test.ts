@@ -12,6 +12,7 @@ import {
 	vi,
 } from "vite-plus/test";
 
+import { generate } from "#/generate";
 import { resolveMigrations } from "#/migrations";
 import type { UmzugContext } from "#/migrations";
 
@@ -233,5 +234,24 @@ describe(resolveMigrations, () => {
 		await expect(
 			migration!.up(params("0000000001-a.mjs", context)),
 		).rejects.toThrow(TypeError);
+	});
+
+	it("loads a scaffolded cjs migration end to end", async () => {
+		const created = await generate({
+			format: "cjs",
+			name: "a",
+			targetPath: folder,
+		});
+
+		const { context } = stubContext();
+		const [migration] = await resolveMigrations(folder);
+
+		expect(created).toBe(join(folder, migration!.name));
+		await expect(
+			migration!.up(params(migration!.name, context)),
+		).resolves.toBeUndefined();
+		await expect(
+			migration!.down?.(params(migration!.name, context)),
+		).resolves.toBeUndefined();
 	});
 });
