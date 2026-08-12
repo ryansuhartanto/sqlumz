@@ -11,7 +11,7 @@ import type { InferValue } from "@optique/core";
 import { loggingOptions } from "@optique/logtape";
 import { path } from "@optique/run";
 
-import { initCommand } from "#/commands/init";
+import { executeInit, initCommand } from "#/commands/init";
 import {
 	executeResource,
 	migrationCommand,
@@ -46,7 +46,7 @@ export type CliResult = InferValue<typeof parser>;
 export async function execute(result: CliResult): Promise<void> {
 	switch (result.action) {
 		case "init":
-			return;
+			return executeInit();
 
 		case "migration":
 			return executeResource(result, { folder: result.migrationsPath });

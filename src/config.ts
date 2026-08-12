@@ -57,8 +57,12 @@ export const configContext = createConfigContext<ResolvedConfig, ProjectMeta>({
 	schema: configSchema,
 });
 
+// cache: false — a fresh CLI process only ever searches once or twice, and a
+// stale "not found" entry would be wrong for `init`, which checks for a
+// config and then writes one in the same run
 const explorer = cosmiconfig(pkg.name, {
 	searchStrategy: "project",
+	cache: false,
 });
 
 export async function loadConfig(parsed: {
