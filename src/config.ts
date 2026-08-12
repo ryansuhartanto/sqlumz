@@ -4,7 +4,8 @@ import { createConfigContext } from "@optique/config";
 import type { ConfigLoadResult } from "@optique/config";
 import { AbstractDialect } from "@sequelize/core";
 import type { Options } from "@sequelize/core";
-import { SUPPORTED_DIALECTS } from "@sequelize/core/_non-semver-use-at-your-own-risk_/sequelize-typescript.js";
+// default import: the module is CJS, so Node cannot detect its named exports
+import sequelizeTypescript from "@sequelize/core/_non-semver-use-at-your-own-risk_/sequelize-typescript.js";
 import { cosmiconfig } from "cosmiconfig";
 import type { Class } from "type-fest";
 import z from "zod";
@@ -12,7 +13,7 @@ import z from "zod";
 import { formatSchema, namingSchema } from "#/generate";
 import * as pkg from "#/pkg";
 
-const dialectNameSchema = z.enum(SUPPORTED_DIALECTS);
+const dialectNameSchema = z.enum(sequelizeTypescript.SUPPORTED_DIALECTS);
 
 const dialectClassSchema = z.custom<Class<AbstractDialect>>(
 	(val) =>
