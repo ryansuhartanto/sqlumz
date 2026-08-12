@@ -41,4 +41,4 @@ jobs:
       - if: startsWith(github.ref, 'refs/tags/v')
         run: npm publish ${{ env.PACKAGE }}
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG___REGISTRY_NPMJS_ORG___AUTHTOKEN: ${{ secrets.NPM_TOKEN }}
