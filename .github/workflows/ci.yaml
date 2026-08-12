@@ -1,19 +1,25 @@
 on:
   push:
 
+env:
+  PACKAGE: sqlumz-*.tgz
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/aube-action@v1
-      - run: aube ci
+        with:
+          node-version: auto
+          run-install: true
       - run: aubx vp check
+      - run: aubx vp test
       - run: aube pack
       - uses: actions/upload-artifact@v7
         id: artifact
         with:
-          path: sqlumz-*.tgz
+          path: ${{ env.PACKAGE }}
           archive: false
 
   cd:
@@ -29,6 +35,11 @@ jobs:
           skip-decompress: true
       - uses: actions/attest@v4
         with:
-          subject-path: sqlumz-*.tgz
+          subject-path: ${{ env.PACKAGE }}
       - uses: jdx/aube-action@v1
-      - run: aubx pkg-pr-new publish sqlumz-*.tgz
+      - run: aubx pkg-pr-new publish ${{ env.PACKAGE }}
+
+      - if: startsWith(github.ref, 'refs/tags/v')
+        run: aube publish ${{ env.PACKAGE }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -26,6 +26,11 @@
 			"types": "./dist/index.d.ts"
 		}
 	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"registry": "https://registry.npmjs.org/"
+	},
 	"scripts": {
 		"build": "vp pack",
 		"test": "vp test",
