@@ -32,7 +32,11 @@ async function cli(args: string[], config: Config = {}): Promise<CliResult> {
 		contextOptions: {
 			load: () => ({
 				config,
-				meta: { configPath: join(root, "sqlumz.config.ts"), configDir: root },
+				meta: {
+					configPath: join(root, "sqlumz.config.ts"),
+					configDir: root,
+					rootDir: root,
+				},
 			}),
 		},
 		stderr: (text) => diagnostics.push(text),

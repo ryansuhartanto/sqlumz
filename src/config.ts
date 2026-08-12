@@ -1,7 +1,7 @@
-import { dirname } from "node:path";
+import { basename, dirname } from "node:path";
 
 import { createConfigContext } from "@optique/config";
-import type { ConfigLoadResult } from "@optique/config";
+import type { ConfigLoadResult, ConfigMeta } from "@optique/config";
 import { AbstractDialect } from "@sequelize/core";
 import type { Options } from "@sequelize/core";
 // default import: the module is CJS, so Node cannot detect its named exports
@@ -45,7 +45,12 @@ export type Config = z.input<typeof configSchema>;
 
 export type ResolvedConfig = z.output<typeof configSchema>;
 
-export const configContext = createConfigContext({
+export type ProjectMeta = {
+	/** Base for relative `path` entries. Not always `configDir`. */
+	rootDir: string;
+} & ConfigMeta;
+
+export const configContext = createConfigContext<ResolvedConfig, ProjectMeta>({
 	schema: configSchema,
 });
 
@@ -55,7 +60,7 @@ const explorer = cosmiconfig(pkg.name, {
 
 export async function loadConfig(parsed: {
 	config?: string;
-}): Promise<ConfigLoadResult | undefined> {
+}): Promise<ConfigLoadResult<ProjectMeta> | undefined> {
 	const found = await (parsed.config
 		? explorer.load(parsed.config)
 		: explorer.search());
@@ -64,11 +69,17 @@ export async function loadConfig(parsed: {
 		return;
 	}
 
+	const configDir = dirname(found.filepath);
+
 	return {
 		config: found.config as unknown,
 		meta: {
 			configPath: found.filepath,
-			configDir: dirname(found.filepath),
+			configDir,
+			// cosmiconfig also searches `<root>/.config/`, so the file's own
+			// directory is a directory below the project root there
+			rootDir:
+				basename(configDir) === ".config" ? dirname(configDir) : configDir,
 		},
 	};
 }

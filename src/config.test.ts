@@ -104,6 +104,7 @@ describe(loadConfig, () => {
 			meta: {
 				configPath: filepath,
 				configDir: dirname(filepath),
+				rootDir: dirname(filepath),
 			},
 		});
 		await expect(loadConfig({ config: filepath })).resolves.toStrictEqual({
@@ -111,6 +112,26 @@ describe(loadConfig, () => {
 			meta: {
 				configPath: filepath,
 				configDir: dirname(filepath),
+				rootDir: dirname(filepath),
+			},
+		});
+	});
+
+	it("roots a `.config/` layout at the project directory", async () => {
+		const filepath = "/project/.config/sqlumzrc.ts";
+
+		mockExplorer.search = vi.fn().mockResolvedValueOnce({
+			config: {},
+			filepath,
+			isEmpty: false,
+		});
+
+		await expect(loadConfig({})).resolves.toStrictEqual({
+			config: {},
+			meta: {
+				configPath: filepath,
+				configDir: "/project/.config",
+				rootDir: "/project",
 			},
 		});
 	});

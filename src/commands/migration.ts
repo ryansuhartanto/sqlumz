@@ -1,20 +1,8 @@
-import {
-	command,
-	constant,
-	map,
-	message,
-	object,
-	or,
-	text,
-} from "@optique/core";
+import { command, constant, message, object, or, text } from "@optique/core";
 import type { InferValue } from "@optique/core";
 import { print } from "@optique/run";
 
-import {
-	generateCommand,
-	migrateOptions,
-	targetOption,
-} from "#/commands/shared";
+import { generateCommand, runOptions, undoOptions } from "#/commands/shared";
 import type { ConfigValues } from "#/commands/shared";
 import { generate } from "#/generate";
 import { run, status, undo } from "#/umzug";
@@ -26,7 +14,7 @@ export const migrationCommand = command(
 			"run",
 			object({
 				action: constant("migration:run"),
-				migrate: migrateOptions(targetOption()),
+				migrate: runOptions(),
 			}),
 			{ description: message`Apply pending migrations` },
 		),
@@ -34,10 +22,7 @@ export const migrationCommand = command(
 			"undo",
 			object({
 				action: constant("migration:undo"),
-				// `--to 0` reverts everything; umzug spells that as the number `0`
-				migrate: migrateOptions(
-					map(targetOption(), (to) => (to === "0" ? 0 : to)),
-				),
+				migrate: undoOptions(),
 			}),
 			{ description: message`Revert executed migrations` },
 		),

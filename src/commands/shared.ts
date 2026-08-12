@@ -2,41 +2,39 @@
 import { resolve } from "node:path";
 
 import { bindConfig } from "@optique/config";
-import type { ConfigMeta } from "@optique/config";
 import {
 	choice,
 	command,
 	constant,
 	fail,
 	integer,
+	map,
 	object,
 	option,
 	optional,
 	or,
 	string,
 } from "@optique/core";
-import type { InferValue, Message, Mode, Parser } from "@optique/core";
+import type { InferValue, Message } from "@optique/core";
 import type { AbstractDialect, Options } from "@sequelize/core";
 
 import { configContext } from "#/config";
+import type { ProjectMeta } from "#/config";
 import { formatSchema } from "#/generate";
 import type { MigrationFormat, MigrationNaming } from "#/generate";
 
-// TODO: relative paths resolve against the config file's directory, which is wrong
-// when the config lives at `.config/sqlumzrc.ts` — it should resolve against the
-// project root. Fixing it belongs in config loading, not here.
-function fromConfigDir(meta: ConfigMeta | undefined, path: string): string {
-	return resolve(meta?.configDir ?? process.cwd(), path);
+function fromRootDir(meta: ProjectMeta | undefined, path: string): string {
+	return resolve(meta?.rootDir ?? process.cwd(), path);
 }
 
 export const configOptions = object({
 	migrationsPath: bindConfig(fail<string>(), {
 		context: configContext,
-		key: (config, meta) => fromConfigDir(meta, config.path.migrations),
+		key: (config, meta) => fromRootDir(meta, config.path.migrations),
 	}),
 	seedsPath: bindConfig(fail<string>(), {
 		context: configContext,
-		key: (config, meta) => fromConfigDir(meta, config.path.seeds),
+		key: (config, meta) => fromRootDir(meta, config.path.seeds),
 	}),
 	// bound here rather than on the `generate` subcommand: bindConfig's config
 	// fallback does not resolve inside a command branch, only at the top level
@@ -63,17 +61,24 @@ export type ConfigValues = InferValue<typeof configOptions>;
 
 /** `or` makes `--to` and `--step` mutually exclusive at parse time, matching
  * umzug's `MergeExclusive` option shape so the value forwards as-is. */
-export function migrateOptions<M extends Mode, T, S>(to: Parser<M, T, S>) {
+function exclusive<T>(mapTarget: (to: string) => T) {
 	return optional(
 		or(
-			object({ to }),
+			object({
+				to: map(option("--to", string({ metavar: "NAME" })), mapTarget),
+			}),
 			object({ step: option("--step", integer({ metavar: "N" })) }),
 		),
 	);
 }
 
-export function targetOption() {
-	return option("--to", string({ metavar: "NAME" }));
+export function runOptions() {
+	return exclusive((to) => to);
+}
+
+/** `--to 0` reverts everything; umzug spells that as the number `0`. */
+export function undoOptions() {
+	return exclusive((to) => (to === "0" ? 0 : to));
 }
 
 export function generateCommand<const TAction extends string>(
