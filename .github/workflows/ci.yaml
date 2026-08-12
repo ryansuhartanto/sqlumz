@@ -39,8 +39,4 @@ jobs:
 
       - run: npx pkg-pr-new publish ${{ env.PACKAGE }}
       - if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
-          npm publish ${{ env.PACKAGE }}
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ${{ env.PACKAGE }}
