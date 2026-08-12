@@ -35,6 +35,9 @@ Initialize with:
 sqlumz init
 ```
 
+Writes a starter `sqlumz.config.ts` in the current directory and refuses, printing the existing
+path instead, if a config is already found.
+
 sqlumz reads its config through [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig), pick either:
 
 - `sqlumz.config.js`
@@ -54,13 +57,14 @@ export default defineConfig({
 });
 ```
 
-| Key               | Default        | Meaning                                                                  |
-| ----------------- | -------------- | ------------------------------------------------------------------------ |
-| `sequelize`       | —              | Options passed to `new Sequelize()`. Omit it and only scaffolding works. |
-| `format`          | `"ts"`         | Scaffold format: `sql`, `ts`, or `js`.                                   |
-| `naming`          | `"timestamp"`  | Filename prefix: `timestamp` or `sequence`.                              |
-| `path.migrations` | `"migrations"` | Migrations directory.                                                    |
-| `path.seeds`      | `"seeds"`      | Seeds directory.                                                         |
+| Key               | Default        | Meaning                                                                    |
+| ----------------- | -------------- | -------------------------------------------------------------------------- |
+| `sequelize`       | —              | Options passed to `new Sequelize()`. Omit it and only scaffolding works.   |
+| `format`          | `"ts"`         | Scaffold format: `sql`, `js`, `ts`, `mjs`, `cjs`, `mts`, or `cts`.         |
+| `naming`          | `"timestamp"`  | Filename prefix: `timestamp` or `sequence`.                                |
+| `emptyName`       | `"warn"`       | What to do when `--name` slugifies to empty: `warn`, `silent`, or `error`. |
+| `path.migrations` | `"migrations"` | Migrations directory.                                                      |
+| `path.seeds`      | `"seeds"`      | Seeds directory.                                                           |
 
 Relative paths resolve against the project root.
 
@@ -85,14 +89,14 @@ sqlumz migration undo                             # revert the last one
 
 `seed` takes the same four subcommands, against `path.seeds`.
 
-| Flag                  | Applies to    | Meaning                                                                   |
-| --------------------- | ------------- | ------------------------------------------------------------------------- |
-| `--to <name>`         | `run`, `undo` | Stop at this migration, inclusive. `--to 0` on `undo` reverts everything. |
-| `--step <n>`          | `run`, `undo` | Only apply or revert this many.                                           |
-| `--name <name>`       | `generate`    | Required. Slugified into the filename.                                    |
-| `--format <fmt>`      | `generate`    | Override the configured `format` for one invocation.                      |
-| `-c, --config <path>` | all           | Use a specific config file instead of searching.                          |
-| `-v, --verbose`       | all           | Repeatable. `-v` for info, `-vv` for debug SQL.                           |
+| Flag                  | Applies to    | Meaning                                                                             |
+| --------------------- | ------------- | ----------------------------------------------------------------------------------- |
+| `--to <name>`         | `run`, `undo` | Stop at this migration, inclusive. `--to 0` on `undo` reverts everything.           |
+| `--step <n>`          | `run`, `undo` | Only apply or revert this many.                                                     |
+| `--name <name>`       | `generate`    | Required. Slugified into the filename.                                              |
+| `--format <fmt>`      | `generate`    | Override the configured `format`: `sql`, `js`, `ts`, `mjs`, `cjs`, `mts`, or `cts`. |
+| `-c, --config <path>` | all           | Use a specific config file instead of searching.                                    |
+| `-v, --verbose`       | all           | Repeatable. `-v` for info, `-vv` for debug SQL.                                     |
 
 `--to` and `--step` are mutually exclusive; passing both is a usage error.
 
@@ -134,6 +138,10 @@ export async function down({ sequelize }: UmzugContext): Promise<void> {
 `.js`, `.ts`, `.mjs`, `.cjs`, `.mts`, and `.cts` are all recognised, as named exports or as a
 default export object. Your runtime has to be able to import the file — for `.ts`, that means
 Node's type stripping or a loader.
+
+`generate --format js`/`ts` scaffolds follow the nearest `package.json`'s `"type"` field — ESM
+when it's `"module"`, CommonJS otherwise. Request `.mjs`/`.mts` or `.cjs`/`.cts` to force one
+explicitly regardless of `package.json`.
 
 Migrations run in filename order, compared with `localeCompare`. If you pick `naming: "sequence"`,
 never change the zero-pad width once migrations exist; it silently reorders history.
