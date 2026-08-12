@@ -17,7 +17,11 @@ import type { AbstractDialect, Options } from "@sequelize/core";
 
 import { configContext } from "#/config";
 import type { ProjectMeta } from "#/config";
-import type { MigrationFormat, MigrationNaming } from "#/generate";
+import type {
+	EmptyNamePolicy,
+	MigrationFormat,
+	MigrationNaming,
+} from "#/generate";
 
 function fromRootDir(meta: ProjectMeta | undefined, path: string): string {
 	return resolve(meta?.rootDir ?? process.cwd(), path);
@@ -41,6 +45,10 @@ export const configOptions = object({
 	naming: bindConfig(fail<MigrationNaming>(), {
 		context: configContext,
 		key: "naming",
+	}),
+	emptyName: bindConfig(fail<EmptyNamePolicy>(), {
+		context: configContext,
+		key: "emptyName",
 	}),
 	// wrapped: bindConfig reads an `undefined` accessor result as "missing" and
 	// fails the parse, but `sequelize` is legitimately absent when scaffolding

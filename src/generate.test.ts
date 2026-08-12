@@ -184,4 +184,62 @@ describe(generate, () => {
 			expect(contents).not.toContain("export async function");
 		},
 	);
+
+	describe("empty slug", () => {
+		it("uses the prefix alone with no trailing dash when emptyName is silent", async () => {
+			const created = await generate({
+				format: "ts",
+				name: "!!!",
+				emptyName: "silent",
+				targetPath: root,
+			});
+
+			expect(basename(created)).toBe(`${STAMP}.ts`);
+		});
+
+		it("uses the prefix alone for the sql directory name", async () => {
+			const created = await generate({
+				format: "sql",
+				name: "!!!",
+				emptyName: "silent",
+				targetPath: root,
+			});
+
+			expect(basename(created)).toBe(STAMP);
+		});
+
+		it("rejects and writes nothing when emptyName is error", async () => {
+			await expect(
+				generate({
+					format: "ts",
+					name: "!!!",
+					emptyName: "error",
+					targetPath: root,
+				}),
+			).rejects.toThrow(/empty string/);
+
+			await expect(readdir(root)).resolves.toStrictEqual([]);
+		});
+
+		it("still produces the file when emptyName is warn (the default)", async () => {
+			const created = await generate({
+				format: "ts",
+				name: "!!!",
+				targetPath: root,
+			});
+
+			expect(basename(created)).toBe(`${STAMP}.ts`);
+		});
+
+		it("leaves a normal name unaffected", async () => {
+			const created = await generate({
+				format: "ts",
+				name: "a",
+				emptyName: "silent",
+				targetPath: root,
+			});
+
+			expect(basename(created)).toBe(`${STAMP}-a.ts`);
+		});
+	});
 });

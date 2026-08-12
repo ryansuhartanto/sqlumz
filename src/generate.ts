@@ -1,6 +1,7 @@
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { getLogger } from "@logtape/logtape";
 import z from "zod";
 
 import {
@@ -22,9 +23,13 @@ export const formatSchema = z.enum([
 
 export const namingSchema = z.enum(["timestamp", "sequence"]);
 
+export const emptyNameSchema = z.enum(["warn", "silent", "error"]);
+
 export type MigrationFormat = z.infer<typeof formatSchema>;
 
 export type MigrationNaming = z.infer<typeof namingSchema>;
+
+export type EmptyNamePolicy = z.infer<typeof emptyNameSchema>;
 
 export type GenerateOptions = {
 	format: MigrationFormat;
@@ -34,6 +39,8 @@ export type GenerateOptions = {
 	 * widening it silently reorders history.
 	 */
 	naming?: MigrationNaming;
+	/** What to do when `name` slugifies to "". */
+	emptyName?: EmptyNamePolicy;
 	targetPath: string;
 };
 
@@ -88,6 +95,7 @@ export async function generate({
 	format,
 	name,
 	naming = "timestamp",
+	emptyName = "warn",
 	targetPath,
 }: GenerateOptions): Promise<string> {
 	await mkdir(targetPath, { recursive: true });
@@ -97,7 +105,24 @@ export async function generate({
 			? nextSequence(await readdir(targetPath))
 			: getCurrentTimestamp();
 
-	const base = `${prefix}-${slugify(name)}`;
+	const slug = slugify(name);
+
+	if (slug === "") {
+		if (emptyName === "error") {
+			throw new Error(
+				`Name "${name}" slugifies to an empty string; refusing to generate (emptyName: "error").`,
+			);
+		}
+
+		if (emptyName === "warn") {
+			getLogger(["sqlumz", "generate"]).warn(
+				`Name {name} slugifies to an empty string; generating {prefix} with no slug.`,
+				{ name, prefix },
+			);
+		}
+	}
+
+	const base = slug === "" ? prefix : `${prefix}-${slug}`;
 
 	if (format === "sql") {
 		const folder = join(targetPath, base);

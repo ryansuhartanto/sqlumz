@@ -10,7 +10,7 @@ import { cosmiconfig } from "cosmiconfig";
 import type { Class } from "type-fest";
 import z from "zod";
 
-import { formatSchema, namingSchema } from "#/generate";
+import { emptyNameSchema, formatSchema, namingSchema } from "#/generate";
 import * as pkg from "#/pkg";
 
 const dialectNameSchema = z.enum(sequelizeTypescript.SUPPORTED_DIALECTS);
@@ -30,6 +30,7 @@ const sequelizeSchema = z.looseObject({
 export const configSchema = z.strictObject({
 	format: formatSchema.default("ts"),
 	naming: namingSchema.default("timestamp"),
+	emptyName: emptyNameSchema.default("warn"),
 	path: z
 		.object({
 			migrations: z.string().default("migrations"),

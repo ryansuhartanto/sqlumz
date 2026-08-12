@@ -129,6 +129,7 @@ export async function executeResource(
 				format: result.formatOverride ?? result.format,
 				name: result.name,
 				naming: result.naming,
+				emptyName: result.emptyName,
 				targetPath: folder,
 			});
 

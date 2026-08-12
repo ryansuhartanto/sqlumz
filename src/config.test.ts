@@ -31,12 +31,19 @@ describe(configSchema.parse, () => {
 		expect(configSchema.parse(config)).toStrictEqual({
 			format: "ts",
 			naming: "timestamp",
+			emptyName: "warn",
 			path: {
 				migrations: "migrations",
 				seeds: "seeds",
 			},
 			sequelize: { dialect: "postgres" },
 		});
+	});
+
+	it.each(["warn", "silent", "error"])("accepts emptyName: %s", (emptyName) => {
+		const config = { sequelize: { dialect: "postgres" }, emptyName };
+
+		expect(configSchema.parse(config).emptyName).toBe(emptyName);
 	});
 
 	it.each(SUPPORTED_DIALECTS)("validates dialect name: %s", (dialect) => {
