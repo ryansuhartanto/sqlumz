@@ -55,7 +55,9 @@ function resourceCommand<const TAction extends string>(action: TAction) {
 					operation: constant("generate"),
 					name: argument(string({ metavar: "NAME" })),
 					formatOverride: optional(
-						option("--format", choice(formatSchema.options)),
+						option("--format", choice(formatSchema.options), {
+							hidden: "usage",
+						}),
 					),
 				}),
 				{ description: message`Scaffold a new ${text(action)}` },
