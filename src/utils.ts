@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { findPackageJSON } from "node:module";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 export function slugify(text: string): string {
 	return text
@@ -36,25 +38,23 @@ export function splitSql(sql: string): string[] {
 }
 
 export async function isEsmProject(startDir: string): Promise<boolean> {
-	let dir = resolve(startDir);
+	try {
+		// findPackageJSON returns the resolved base, not undefined, when the walk
+		// reaches the filesystem root without finding one, and throws outright on
+		// a malformed nearest package.json
+		const found = findPackageJSON(
+			".",
+			pathToFileURL(join(resolve(startDir), "/")),
+		);
 
-	while (true) {
-		try {
-			const raw = await readFile(join(dir, "package.json"), "utf8");
-
-			return (JSON.parse(raw) as { type?: unknown }).type === "module";
-		} catch (error) {
-			if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-				return false;
-			}
-		}
-
-		const parent = dirname(dir);
-
-		if (parent === dir) {
+		if (found?.endsWith("package.json") !== true) {
 			return false;
 		}
 
-		dir = parent;
+		const raw = await readFile(found, "utf8");
+
+		return (JSON.parse(raw) as { type?: unknown }).type === "module";
+	} catch {
+		return false;
 	}
 }
