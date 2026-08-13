@@ -57,14 +57,14 @@ export default defineConfig({
 });
 ```
 
-| Key               | Default        | Meaning                                                                    |
-| ----------------- | -------------- | -------------------------------------------------------------------------- |
-| `sequelize`       | —              | Options passed to `new Sequelize()`. Omit it and only scaffolding works.   |
-| `format`          | `"ts"`         | Scaffold format: `sql`, `js`, `ts`, `mjs`, `cjs`, `mts`, or `cts`.         |
-| `naming`          | `"timestamp"`  | Filename prefix: `timestamp` or `sequence`.                                |
-| `emptyName`       | `"warn"`       | What to do when `--name` slugifies to empty: `warn`, `silent`, or `error`. |
-| `path.migrations` | `"migrations"` | Migrations directory.                                                      |
-| `path.seeds`      | `"seeds"`      | Seeds directory.                                                           |
+| Key               | Default        | Meaning                                                                               |
+| ----------------- | -------------- | ------------------------------------------------------------------------------------- |
+| `sequelize`       | —              | Options passed to `new Sequelize()`. Omit it and only scaffolding works.              |
+| `format`          | `"ts"`         | Scaffold format: `sql`, `js`, `ts`, `mjs`, `cjs`, `mts`, or `cts`.                    |
+| `naming`          | `"timestamp"`  | Filename prefix: `timestamp` or `sequence`.                                           |
+| `emptyName`       | `"warn"`       | What to do when the `generate` name slugifies to empty: `warn`, `silent`, or `error`. |
+| `path.migrations` | `"migrations"` | Migrations directory.                                                                 |
+| `path.seeds`      | `"seeds"`      | Seeds directory.                                                                      |
 
 Relative paths resolve against the project root.
 
@@ -81,7 +81,7 @@ export default defineConfig({
 ## Commands
 
 ```sh
-sqlumz migration generate --name "create users"   # scaffold
+sqlumz migration generate "create users"          # scaffold
 sqlumz migration run                              # apply everything pending
 sqlumz migration status                           # list executed and pending
 sqlumz migration undo                             # revert the last one
@@ -93,7 +93,7 @@ sqlumz migration undo                             # revert the last one
 | --------------------- | ------------- | ----------------------------------------------------------------------------------- |
 | `--to <name>`         | `run`, `undo` | Stop at this migration, inclusive. `--to 0` on `undo` reverts everything.           |
 | `--step <n>`          | `run`, `undo` | Only apply or revert this many.                                                     |
-| `--name <name>`       | `generate`    | Required. Slugified into the filename.                                              |
+| `<name>`              | `generate`    | Required positional. Slugified into the filename.                                   |
 | `--format <fmt>`      | `generate`    | Override the configured `format`: `sql`, `js`, `ts`, `mjs`, `cjs`, `mts`, or `cts`. |
 | `-c, --config <path>` | all           | Use a specific config file instead of searching.                                    |
 | `-v, --verbose`       | all           | Repeatable. `-v` for info, `-vv` for debug SQL.                                     |
@@ -124,14 +124,21 @@ A single `.sql` file (no directory) also works, and is treated as up-only.
 ### TypeScript and JavaScript
 
 ```ts
+import { DataTypes } from "@sequelize/core";
 import type { UmzugContext } from "sqlumz";
 
-export async function up({ sequelize }: UmzugContext): Promise<void> {
-  await sequelize.query(`CREATE TABLE users (id SERIAL PRIMARY KEY)`);
+export async function up({
+  sequelize: { queryInterface },
+}: UmzugContext): Promise<void> {
+  await queryInterface.createTable("users", {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  });
 }
 
-export async function down({ sequelize }: UmzugContext): Promise<void> {
-  await sequelize.query(`DROP TABLE users`);
+export async function down({
+  sequelize: { queryInterface },
+}: UmzugContext): Promise<void> {
+  await queryInterface.dropTable("users");
 }
 ```
 

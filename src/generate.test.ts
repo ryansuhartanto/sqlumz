@@ -73,6 +73,9 @@ describe(generate, () => {
 		expect(contents).toContain(`import type { UmzugContext } from "sqlumz";`);
 		expect(contents).toContain("exports.up = async function up(");
 		expect(contents).toContain("exports.down = async function down(");
+		expect(contents).toContain(
+			"{ sequelize: { queryInterface } }: UmzugContext",
+		);
 	});
 
 	it("writes a jsdoc-annotated skeleton for js, defaulting to CommonJS with no surrounding package.json", async () => {

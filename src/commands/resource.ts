@@ -1,4 +1,5 @@
 import {
+	argument,
 	choice,
 	command,
 	constant,
@@ -52,7 +53,7 @@ function resourceCommand<const TAction extends string>(action: TAction) {
 				object({
 					action: constant(action),
 					operation: constant("generate"),
-					name: option("--name", string({ metavar: "NAME" })),
+					name: argument(string({ metavar: "NAME" })),
 					formatOverride: optional(
 						option("--format", choice(formatSchema.options)),
 					),

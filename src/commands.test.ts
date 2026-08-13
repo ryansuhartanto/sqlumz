@@ -90,7 +90,7 @@ describe("command parsing", () => {
 			{ action: "migration", operation: "undo", migrate: { to: 0 } },
 		],
 		[
-			["migration", "generate", "--name", "add users"],
+			["migration", "generate", "add users"],
 			{ action: "migration", operation: "generate", name: "add users" },
 		],
 		[["seed", "run"], { action: "seed", operation: "run" }],
@@ -100,7 +100,7 @@ describe("command parsing", () => {
 		],
 		[["seed", "status"], { action: "seed", operation: "status" }],
 		[
-			["seed", "generate", "--name", "a", "--format", "sql"],
+			["seed", "generate", "a", "--format", "sql"],
 			{
 				action: "seed",
 				operation: "generate",
@@ -186,7 +186,7 @@ describe("config binding", () => {
 describe(execute, () => {
 	it("lets --format override the configured format", async () => {
 		const config = { format: "js", naming: "sequence" } as const;
-		const generate = ["migration", "generate", "--name", "a"];
+		const generate = ["migration", "generate", "a"];
 
 		await execute(await cli(generate, config));
 		await execute(await cli([...generate, "--format", "ts"], config));
@@ -200,9 +200,7 @@ describe(execute, () => {
 	it("scaffolds into the migrations path", async () => {
 		const config = { naming: "sequence" } as const;
 
-		await execute(
-			await cli(["migration", "generate", "--name", "add users"], config),
-		);
+		await execute(await cli(["migration", "generate", "add users"], config));
 
 		await expect(readdir(join(root, "migrations"))).resolves.toStrictEqual([
 			"0000000001-add-users.ts",
@@ -213,7 +211,7 @@ describe(execute, () => {
 		const config = { naming: "sequence" } as const;
 
 		await execute(
-			await cli(["seed", "generate", "--name", "a", "--format", "sql"], config),
+			await cli(["seed", "generate", "a", "--format", "sql"], config),
 		);
 
 		await expect(

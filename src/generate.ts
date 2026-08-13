@@ -60,8 +60,8 @@ function moduleFunction(
 	language: Language,
 	moduleSystem: ModuleSystem,
 ): string {
-	const param =
-		language === "ts" ? "{ sequelize }: UmzugContext" : "{ sequelize }";
+	const context = "{ sequelize: { queryInterface } }";
+	const param = language === "ts" ? `${context}: UmzugContext` : context;
 	const returnType = language === "ts" ? ": Promise<void>" : "";
 	const doc = language === "js" ? FUNCTION_TYPE_DOC : "";
 
