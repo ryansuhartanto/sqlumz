@@ -46,6 +46,36 @@ async function cli(args: string[], config: Config = {}): Promise<CliResult> {
 	});
 }
 
+/** Same, but with no config file anywhere — what a fresh project looks like. */
+async function cliWithoutConfig(args: string[]): Promise<CliResult> {
+	const diagnostics: string[] = [];
+
+	return runCli(parser, {
+		args,
+		programName: "sqlumz",
+		contexts: [configContext],
+		contextOptions: { load: () => undefined },
+		stderr: (text) => diagnostics.push(text),
+		onExit: (code: number) => {
+			throw new Error(`exited ${code}: ${diagnostics.join(" / ")}`);
+		},
+	});
+}
+
+describe("no config file", () => {
+	it("parses `init`, the command that exists to create one", async () => {
+		await expect(cliWithoutConfig(["init"])).resolves.toMatchObject({
+			action: "init",
+		});
+	});
+
+	it("still requires config for commands that consume it", async () => {
+		await expect(cliWithoutConfig(["migration", "status"])).rejects.toThrow(
+			"Missing required configuration value",
+		);
+	});
+});
+
 describe("command parsing", () => {
 	it.each([
 		[["init"], { action: "init" }],

@@ -35,10 +35,16 @@ export const commands = group(
 	or(initCommand, migrationCommand, seedCommand),
 );
 
-export const parser = merge(
-	group("Global flags", globals),
-	configOptions,
-	nonEmpty(commands),
+// `init` is deliberately outside `configOptions`: bindConfig fails the whole
+// parse when no config file exists, which is exactly the case `init` exists to
+// resolve. Every other command may keep requiring one.
+export const parser = or(
+	merge(group("Global flags", globals), initCommand),
+	merge(
+		group("Global flags", globals),
+		configOptions,
+		nonEmpty(group("Commands", or(migrationCommand, seedCommand))),
+	),
 );
 
 export type CliResult = InferValue<typeof parser>;
