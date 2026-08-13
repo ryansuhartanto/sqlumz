@@ -169,9 +169,9 @@ describe("config binding", () => {
 	});
 
 	it("survives an absent sequelize entry", async () => {
-		const result = await cli(["migration", "status"]);
-
-		expect(result.sequelize).toStrictEqual({ options: undefined });
+		await expect(cli(["migration", "status"])).resolves.toMatchObject({
+			sequelize: { options: undefined },
+		});
 	});
 
 	it("passes a configured sequelize entry through", async () => {
