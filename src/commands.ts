@@ -29,22 +29,13 @@ const globals = object(
 	},
 	{ hidden: "usage" },
 );
-
-export const commands = group(
-	"Commands",
-	or(initCommand, migrationCommand, seedCommand),
+const commands = nonEmpty(
+	merge(configOptions, or(migrationCommand, seedCommand)),
 );
 
-// `init` is deliberately outside `configOptions`: bindConfig fails the whole
-// parse when no config file exists, which is exactly the case `init` exists to
-// resolve. Every other command may keep requiring one.
-export const parser = or(
-	merge(group("Global flags", globals), initCommand),
-	merge(
-		group("Global flags", globals),
-		configOptions,
-		nonEmpty(group("Commands", or(migrationCommand, seedCommand))),
-	),
+export const parser = merge(
+	group("Global flags", globals),
+	or(group("Initialize", initCommand), group("Commands", commands)),
 );
 
 export type CliResult = InferValue<typeof parser>;
