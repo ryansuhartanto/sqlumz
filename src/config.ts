@@ -22,10 +22,15 @@ const dialectClassSchema = z.custom<Class<AbstractDialect>>(
 
 // looseObject: dialect-specific connection options (`storage`, `host`, `port`,
 // ...) aren't known to this schema, so unknown keys must pass through instead
-// of being stripped
-const sequelizeSchema = z.looseObject({
+// of being stripped. Annotated (rather than `satisfies`) so the exported type
+// carries real `Options<AbstractDialect>` fields instead of the schema's own
+// index-signature type.
+const sequelizeSchema: z.ZodType<
+	Options<AbstractDialect>,
+	Options<AbstractDialect>
+> = z.looseObject({
 	dialect: z.union([dialectNameSchema, dialectClassSchema]),
-}) satisfies z.ZodType<Options<AbstractDialect>>;
+});
 
 export const configSchema = z.strictObject({
 	format: formatSchema.default("ts"),
@@ -40,7 +45,13 @@ export const configSchema = z.strictObject({
 	sequelize: sequelizeSchema.optional(),
 });
 
-export function defineConfig(config: Config): Config {
+// `Omit<Config, "sequelize">` rather than plain `Config &`: intersecting two
+// `Options<...>` instantiations for the same property (the base `Config`'s and
+// this function's generic one) blows up to "type instantiation is excessively
+// deep" during inference.
+export function defineConfig<Dialect extends AbstractDialect = AbstractDialect>(
+	config: Omit<Config, "sequelize"> & { sequelize?: Options<Dialect> },
+): Config {
 	return config;
 }
 

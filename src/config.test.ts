@@ -103,31 +103,51 @@ describe(defineConfig, () => {
 		expect(defineConfig(config)).toStrictEqual(config);
 	});
 
-	it("accepts a dialect class with its connection options", () => {
+	it("accepts a dialect class with its dialect-specific and core options", () => {
 		const config = defineConfig({
-			sequelize: { dialect: SqliteDialect, storage: "./db.sqlite" },
+			sequelize: {
+				dialect: SqliteDialect,
+				storage: "./db.sqlite",
+				benchmark: true,
+			},
 		});
 
 		expect(config.sequelize).toStrictEqual({
 			dialect: SqliteDialect,
 			storage: "./db.sqlite",
+			benchmark: true,
 		});
 	});
 
-	it("accepts a dialect name with its connection options", () => {
+	it("accepts a dialect name with core options only", () => {
 		const config = defineConfig({
-			sequelize: { dialect: "postgres", host: "localhost", port: 5432 },
+			sequelize: { dialect: "postgres", benchmark: true },
 		});
 
 		expect(config.sequelize).toStrictEqual({
 			dialect: "postgres",
-			host: "localhost",
-			port: 5432,
+			benchmark: true,
 		});
 	});
 
 	it("accepts an empty configuration", () => {
 		expect(defineConfig({})).toStrictEqual({});
+	});
+
+	it("rejects a wrong type for a known core option", () => {
+		expect(() => {
+			// @ts-expect-error `benchmark` is `boolean | undefined`, not `string`
+			defineConfig({ sequelize: { dialect: "postgres", benchmark: "yes" } });
+		}).not.toThrow();
+	});
+
+	it("rejects a dialect-specific option when the dialect is a name string", () => {
+		expect(() => {
+			defineConfig({
+				// @ts-expect-error `storage` is sqlite-specific; unavailable without a dialect class
+				sequelize: { dialect: "postgres", storage: "./db.sqlite" },
+			});
+		}).not.toThrow();
 	});
 });
 
