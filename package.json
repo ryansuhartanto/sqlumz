@@ -63,6 +63,7 @@
 		"lint": "vp lint",
 		"prepare": "vp config",
 		"prepack": "vpr build",
+		"pack": "bun pm pack",
 		"run": "sqlumz"
 	},
 	"dependencies": {
