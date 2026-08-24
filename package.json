@@ -90,6 +90,10 @@
 		"typescript": "^7.0.2",
 		"vite-plus": "^0.2.8"
 	},
+	"overrides": {
+		"oxfmt": ">=0.62.0 <1",
+		"oxlint": "^1.77.0"
+	},
 	"engines": {
 		"node": "^22.18.0 || >=24"
 	}
