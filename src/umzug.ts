@@ -1,25 +1,29 @@
 import { getLogger } from "@logtape/logtape";
-import { Sequelize } from "@sequelize/core";
-import type { AbstractDialect, Options } from "@sequelize/core";
-import { SequelizeStorage, Umzug } from "umzug";
-import type {
-	MigrateDownOptions,
-	MigrateUpOptions,
-	MigrationMeta,
-	UmzugOptions as UmzugConstructorOptions,
+import {
+	DataTypes,
+	Sequelize,
+	type AbstractDialect,
+	type Options,
+} from "@sequelize/core";
+import {
+	SequelizeStorage,
+	Umzug,
+	type MigrateDownOptions,
+	type MigrateUpOptions,
+	type MigrationMeta,
+	type UmzugOptions as UmzugConstructorOptions,
 } from "umzug";
 
-import { resolveMigrations } from "#/migrations";
-import type { UmzugContext } from "#/migrations";
+import { resolveMigrations, type UmzugContext } from "#/migrations";
 
-export type UmzugOptions = {
+export interface UmzugOptions {
 	sequelizeOptions: Options<AbstractDialect> | undefined;
 	/** Directory of migrations or seeds to resolve. */
 	folder: string;
 	/** Storage table recording what ran. Defaults to umzug's `SequelizeMeta`. */
 	modelName?: string;
 	logger?: UmzugConstructorOptions["logger"];
-};
+}
 
 export type RunOptions = MigrateUpOptions & UmzugOptions;
 
@@ -29,7 +33,7 @@ export type UndoOptions = MigrateDownOptions & UmzugOptions;
 export async function createUmzug({
 	sequelizeOptions,
 	folder,
-	modelName,
+	modelName = "SequelizeMeta",
 	logger = getLogger(["sqlumz", "migration"]),
 }: UmzugOptions): Promise<{
 	umzug: Umzug<UmzugContext>;
@@ -54,7 +58,21 @@ export async function createUmzug({
 	const umzug = new Umzug<UmzugContext>({
 		migrations: await resolveMigrations(folder),
 		context: { sequelize },
-		storage: new SequelizeStorage({ sequelize, modelName }),
+		// umzug builds its own model via the deprecated sequelize.isDefined() (SEQUELIZE0029)
+		storage: new SequelizeStorage({
+			model: sequelize.define(
+				modelName,
+				{
+					name: {
+						type: DataTypes.STRING,
+						allowNull: false,
+						unique: true,
+						primaryKey: true,
+					},
+				},
+				{ timestamps: false },
+			),
+		}),
 		logger,
 	});
 
