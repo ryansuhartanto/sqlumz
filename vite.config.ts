@@ -1,5 +1,6 @@
 import oxfmt from "@kekkon-nexus/config/oxfmt";
 import oxlint from "@kekkon-nexus/config/oxlint";
+import vp from "@kekkon-nexus/config/oxlint/vite-plus";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
@@ -7,12 +8,8 @@ export default defineConfig({
 		...oxfmt,
 	},
 	lint: {
-		extends: [oxlint],
+		extends: [oxlint, vp],
 		jsPlugins: [
-			{
-				name: "vite-plus",
-				specifier: "vite-plus/oxlint-plugin",
-			},
 			{
 				name: "no-relative-import-paths",
 				specifier: "eslint-plugin-no-relative-import-paths",
@@ -20,7 +17,6 @@ export default defineConfig({
 		],
 
 		rules: {
-			"vite-plus/prefer-vite-plus-imports": "error",
 			"no-relative-import-paths/no-relative-import-paths": [
 				"warn",
 				{ allowSameFolder: false, rootDir: `./src`, prefix: "#" },
