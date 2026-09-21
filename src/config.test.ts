@@ -53,7 +53,7 @@ describe(configSchema.parse, () => {
 	});
 
 	it("validates custom dialect class", () => {
-		// @ts-expect-error
+		// @ts-expect-error: abstract members are deliberately left unimplemented
 		class MockDialect extends AbstractDialect {}
 		const config = { sequelize: { dialect: MockDialect } };
 

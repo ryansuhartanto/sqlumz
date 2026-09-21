@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import process from "node:process";
 
 import { command, constant, message, object, text } from "@optique/core";
 import { print } from "@optique/run";

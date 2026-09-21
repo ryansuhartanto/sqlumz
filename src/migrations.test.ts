@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import {
 	afterEach,
+	assert,
 	beforeEach,
 	describe,
 	expect,
@@ -13,8 +14,7 @@ import {
 } from "vite-plus/test";
 
 import { generate } from "#/generate";
-import { resolveMigrations } from "#/migrations";
-import type { UmzugContext } from "#/migrations";
+import { resolveMigrations, type UmzugContext } from "#/migrations";
 
 let folder: string;
 
@@ -120,8 +120,9 @@ describe(resolveMigrations, () => {
 
 		const { context, query, transaction } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
-		await migration!.up(params("0000000001-a.sql", context));
+		await migration.up(params("0000000001-a.sql", context));
 
 		expect(query.mock.calls).toStrictEqual([
 			["CREATE TABLE a (id INT)", { transaction }],
@@ -134,9 +135,10 @@ describe(resolveMigrations, () => {
 
 		const { context } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
 		await expect(
-			migration!.down?.(params("0000000001-a.sql", context)),
+			migration.down?.(params("0000000001-a.sql", context)),
 		).rejects.toThrow("cannot be reverted");
 	});
 
@@ -147,9 +149,10 @@ describe(resolveMigrations, () => {
 
 		const { context, query, transaction } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
-		await migration!.up(params("0000000001-a", context));
-		await migration!.down?.(params("0000000001-a", context));
+		await migration.up(params("0000000001-a", context));
+		await migration.down?.(params("0000000001-a", context));
 
 		expect(query.mock.calls).toStrictEqual([
 			["SELECT 1", { transaction }],
@@ -163,9 +166,10 @@ describe(resolveMigrations, () => {
 
 		const { context } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
 		await expect(
-			migration!.down?.(params("0000000001-a", context)),
+			migration.down?.(params("0000000001-a", context)),
 		).rejects.toThrow("cannot be reverted");
 	});
 
@@ -181,9 +185,10 @@ describe(resolveMigrations, () => {
 
 		const { context } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
-		await migration!.up(params("0000000001-a.mjs", context));
-		await migration!.down?.(params("0000000001-a.mjs", context));
+		await migration.up(params("0000000001-a.mjs", context));
+		await migration.down?.(params("0000000001-a.mjs", context));
 
 		expect(calls).toStrictEqual([
 			["up", context],
@@ -199,12 +204,13 @@ describe(resolveMigrations, () => {
 
 		const { context } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
 		await expect(
-			migration!.up(params("0000000001-a.cjs", context)),
+			migration.up(params("0000000001-a.cjs", context)),
 		).resolves.toBeUndefined();
 		await expect(
-			migration!.down?.(params("0000000001-a.cjs", context)),
+			migration.down?.(params("0000000001-a.cjs", context)),
 		).resolves.toBeUndefined();
 	});
 
@@ -216,12 +222,13 @@ describe(resolveMigrations, () => {
 
 		const { context } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
 		await expect(
-			migration!.up(params("0000000001-a.mjs", context)),
+			migration.up(params("0000000001-a.mjs", context)),
 		).resolves.toBeUndefined();
 		await expect(
-			migration!.down?.(params("0000000001-a.mjs", context)),
+			migration.down?.(params("0000000001-a.mjs", context)),
 		).resolves.toBeUndefined();
 	});
 
@@ -230,9 +237,10 @@ describe(resolveMigrations, () => {
 
 		const { context } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
 		await expect(
-			migration!.up(params("0000000001-a.mjs", context)),
+			migration.up(params("0000000001-a.mjs", context)),
 		).rejects.toThrow(TypeError);
 	});
 
@@ -245,13 +253,14 @@ describe(resolveMigrations, () => {
 
 		const { context } = stubContext();
 		const [migration] = await resolveMigrations(folder);
+		assert(migration);
 
-		expect(created).toBe(join(folder, migration!.name));
+		expect(created).toBe(join(folder, migration.name));
 		await expect(
-			migration!.up(params(migration!.name, context)),
+			migration.up(params(migration.name, context)),
 		).resolves.toBeUndefined();
 		await expect(
-			migration!.down?.(params(migration!.name, context)),
+			migration.down?.(params(migration.name, context)),
 		).resolves.toBeUndefined();
 	});
 });

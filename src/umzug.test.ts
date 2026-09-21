@@ -3,11 +3,17 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { configure, reset } from "@logtape/logtape";
-import type { LogRecord } from "@logtape/logtape";
+import { configure, reset, type LogRecord } from "@logtape/logtape";
 import type { AbstractDialect, Options } from "@sequelize/core";
 import { SqliteDialect } from "@sequelize/sqlite3";
-import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
+import {
+	afterEach,
+	assert,
+	beforeEach,
+	describe,
+	expect,
+	it,
+} from "vite-plus/test";
 
 import { createUmzug, run, status, undo } from "#/umzug";
 
@@ -66,7 +72,7 @@ async function existingTables(): Promise<string[]> {
 			"SELECT name FROM sqlite_master WHERE type = 'table'",
 		);
 
-		return (rows as Array<{ name: string }>)
+		return (rows as { name: string }[])
 			.map((row) => row.name)
 			.filter((name) => TABLES.includes(name))
 			.toSorted();
@@ -75,7 +81,7 @@ async function existingTables(): Promise<string[]> {
 	}
 }
 
-function applied(migrations: Array<{ name: string }>): string[] {
+function applied(migrations: { name: string }[]): string[] {
 	return migrations.map((migration) => migration.name);
 }
 
@@ -145,7 +151,9 @@ describe(run, () => {
 	});
 
 	it("runs specific migrations by name", async () => {
-		const migrations = [names[0]!, names[2]!];
+		const [first, , third] = names;
+		assert(first && third);
+		const migrations = [first, third];
 
 		expect(applied(await run({ ...options, migrations }))).toStrictEqual(
 			migrations,
@@ -182,7 +190,9 @@ describe(undo, () => {
 	});
 
 	it("reverts specific migrations by name", async () => {
-		const migrations = [names[2]!, names[0]!];
+		const [first, , third] = names;
+		assert(first && third);
+		const migrations = [third, first];
 
 		expect(applied(await undo({ ...options, migrations }))).toStrictEqual(
 			migrations,

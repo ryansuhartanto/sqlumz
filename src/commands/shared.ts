@@ -1,5 +1,6 @@
 // oxlint-disable typescript/explicit-module-boundary-types - optique parser types are unwriteable
 import { resolve } from "node:path";
+import process from "node:process";
 
 import { bindConfig } from "@optique/config";
 import {
@@ -11,12 +12,11 @@ import {
 	optional,
 	or,
 	string,
+	type InferValue,
 } from "@optique/core";
-import type { InferValue } from "@optique/core";
 import type { AbstractDialect, Options } from "@sequelize/core";
 
-import { configContext } from "#/config";
-import type { ProjectMeta } from "#/config";
+import { configContext, type ProjectMeta } from "#/config";
 import type {
 	EmptyNamePolicy,
 	MigrationFormat,
