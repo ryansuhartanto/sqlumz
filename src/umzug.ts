@@ -55,6 +55,9 @@ export async function createUmzug({
 		...sequelizeOptions,
 	});
 
+	// umzug uses utf8mb3 for the pre-5.7.7 InnoDB index limit; mb4 fits since
+	const utf8 = ["mysql", "mariadb"].includes(sequelize.dialect.name);
+
 	const umzug = new Umzug<UmzugContext>({
 		migrations: await resolveMigrations(folder),
 		context: { sequelize },
@@ -68,9 +71,14 @@ export async function createUmzug({
 						allowNull: false,
 						unique: true,
 						primaryKey: true,
+						autoIncrement: false,
 					},
 				},
-				{ timestamps: false },
+				{
+					timestamps: false,
+					charset: utf8 ? "utf8mb4" : undefined,
+					collate: utf8 ? "utf8mb4_unicode_ci" : undefined,
+				},
 			),
 		}),
 		logger,

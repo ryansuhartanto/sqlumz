@@ -4,8 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { configure, reset, type LogRecord } from "@logtape/logtape";
-import type { AbstractDialect, Options } from "@sequelize/core";
+import {
+	Sequelize,
+	type AbstractDialect,
+	type ModelStatic,
+	type Options,
+} from "@sequelize/core";
 import { SqliteDialect } from "@sequelize/sqlite3";
+import { SequelizeStorage } from "umzug";
 import {
 	afterEach,
 	assert,
@@ -90,6 +96,28 @@ describe(createUmzug, () => {
 		await expect(
 			createUmzug({ ...options, sequelizeOptions: undefined }),
 		).rejects.toThrow("No database configured");
+	});
+
+	it("defines the same storage model as umzug", async () => {
+		const { sequelize } = await createUmzug(options);
+		const reference = new Sequelize(options.sequelizeOptions);
+
+		try {
+			const ours = sequelize.models.getOrThrow("SequelizeMeta").modelDefinition;
+			const theirs = (
+				new SequelizeStorage({ sequelize: reference })
+					.model as unknown as ModelStatic
+			).modelDefinition;
+
+			expect(ours.rawAttributes).toStrictEqual(theirs.rawAttributes);
+			// options carry the Sequelize instance itself
+			expect({ ...ours.options, sequelize: undefined }).toStrictEqual({
+				...theirs.options,
+				sequelize: undefined,
+			});
+		} finally {
+			await Promise.all([sequelize.close(), reference.close()]);
+		}
 	});
 
 	it("tracks a separate modelName independently", async () => {
