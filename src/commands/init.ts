@@ -11,7 +11,9 @@ import { isEsmProject } from "#/utils";
 export const initCommand = command(
 	"init",
 	object({ action: constant("init") }),
-	{ description: message`Initialize configuration` },
+	{
+		description: message`Initialize configuration`,
+	},
 );
 
 const CONFIG_FILE = "sqlumz.config.ts";
@@ -43,7 +45,8 @@ export async function executeInit(): Promise<void> {
 	const existing = await loadConfig({});
 
 	if (existing) {
-		print(message`Config already exists at ${text(existing.meta.configPath)}`);
+		// oxlint-disable-next-line typescript/no-non-null-assertion
+		print(message`Config already exists at ${text(existing.meta!.configPath)}`);
 
 		return;
 	}
